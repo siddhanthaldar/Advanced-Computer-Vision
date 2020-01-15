@@ -86,8 +86,8 @@ def part2(img):
 ########################################### Sharpen Image ##########################################
 def part3(img):
 	kernel = np.array([[-1,-1,-1], 
-                     [-1, 9,-1],
-                     [-1,-1,-1]])
+					 [-1, 9,-1],
+					 [-1,-1,-1]])
 
 	sharpened_img = np.zeros(img.shape)
 	for i in range(img.shape[0]):
@@ -120,8 +120,91 @@ def part4(img):
 	return binary_img.astype(np.uint8) 																																																																							
 
 ########################################## Detection of Harris Corner points #######################################
-			
 
+def HarrisCorners(img, window_size, k, thresh):
+	"""
+	returns list of corners and new image with corners drawn
+	window_size: The size (side length) of the sliding window
+	k: Harris corner constant. Usually 0.04 - 0.06
+	thresh: The threshold above which a corner is counted
+	"""
+	#Find x and y derivatives
+	dy, dx = np.gradient(img)
+	Ixx = dx**2
+	Ixy = dy*dx
+	Iyy = dy**2
+	height = img.shape[0]
+	width = img.shape[1]
+
+	cornerList = []
+	newImg = img.copy()
+	color_img = cv2.cvtColor(newImg, cv2.COLOR_GRAY2RGB)
+	offset = window_size//2
+
+	#Loop through image and find our corners
+	for y in range(offset, height-offset):
+		for x in range(offset, width-offset):
+			#Calculate sum of squares
+			windowIxx = Ixx[y-offset:y+offset+1, x-offset:x+offset+1]
+			windowIxy = Ixy[y-offset:y+offset+1, x-offset:x+offset+1]
+			windowIyy = Iyy[y-offset:y+offset+1, x-offset:x+offset+1]
+			Sxx = windowIxx.sum()
+			Sxy = windowIxy.sum()
+			Syy = windowIyy.sum()
+
+			det = (Sxx * Syy) - (Sxy**2)
+			trace = Sxx + Syy
+			r = det - k*(trace**2)
+
+			if r > thresh:
+				# print x, y, r
+				cornerList.append([x, y, r])
+				color_img.itemset((y, x, 0), 0)
+				color_img.itemset((y, x, 1), 0)
+				color_img.itemset((y, x, 2), 255)
+	return color_img, cornerList
+
+
+########################################## Connected Component ##########################################
+
+def isokay(a, b, i, j, img, visited):
+	if i>=0 and j>=0 and i<visited.shape[0] and j<visited.shape[1] and visited[i][j]==0 and (int)(img[a][b]) == (int)(img[i][j]):
+		return 1
+	else:
+		return 0
+
+def DFS(i, j, visited, label, connectivity):
+	if connectivity == 4:
+		a1 = [-1, 0, 1, 0]
+		a2 = [0, 1, 0, -1]
+	else:
+		a1 = [-1,-1,0,1,1,1,0,-1]
+		a2 = [0,-1,-1,-1,0,1,1,1]
+	queue = []
+	queue.append([i,j])
+	while(len(queue) != 0):
+		i , j = queue.pop(0)
+		for l in range (len(a1)):
+			if(isokay(i, j, i+a1[l], j+a2[l], img, visited)):
+				# print(i, j, i+a1[l], j+a2[l])
+				visited[i+a1[l]][j+a2[l]] = 1
+				label[i+a1[l]][j+a2[l]] = label[i][j]
+				queue.append([i+a1[l], j+a2[l]])
+
+def part6(img, connectivity):
+
+	visited = np.zeros(img.shape)
+	label = np.zeros(img.shape)
+	c = 0
+	for i in range (img.shape[0]):
+		for j in range (img.shape[1]):
+			if(visited[i][j] == 0):
+				# print(i, j)
+				visited[i][j] = 1
+				label[i][j] = c
+				DFS(i, j, visited, label, connectivity)
+				c = c+1
+	return label
 
 if __name__ == "__main__":
 
@@ -140,9 +223,19 @@ if __name__ == "__main__":
 	# cv2.imwrite("Sharpened.jpg", sharpened_img)
 
 	# Part 4 - Adaptive Thresholding
-	img = cv2.imread("Sharpened.jpg", 0)
-	binary_img = part4(img)
-	cv2.imwrite("Binary.jpg", binary_img)		
-																																																			
+	# img = cv2.imread("Sharpened.jpg", 0)
+	# binary_img = part4(img)
+	# cv2.imwrite("Binary.jpg", binary_img)
 
+	#Part - 5 - Harris Corner
+	# img = cv2.imread("checkerBoard.png", 0)
+	# final_img, cornerList = HarrisCorners(img, int(5), float(0.06), int(10000))
+	# cv2.imwrite("HarrisCorner.jpg", final_img)
+
+	#Part -6 - Connected Components 
+	img = np.array([[0,0,0,0,0],[0,0,1,1,0],[0,0,1,1,0],[0,0,0,1,0],[0,0,0,0,1]])#cv2.imread("sample1.png", 0)
+	print(img.shape)
+	print(img)
+	label = part6(img, 4)
+	print(label)
 	
