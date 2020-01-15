@@ -103,7 +103,24 @@ def part3(img):
 
 
 ########################################## Adaptive Thresholding #######################################
-# Reference Paper - https://people.scs.carleton.ca/~roth/iit-publications-iti/docs/gerh-50002.pdf
+def part4(img):
+	binary_img = np.zeros(img.shape)
+	for i in range(img.shape[0]):
+		for j in range(img.shape[1]):
+			mean = 0
+			for k1 in range(-1,2):
+				for k2 in range(-1,2):
+					h = i + k1
+					w = j + k2
+					if h<0 or w<0 or h>=img.shape[0] or w>=img.shape[1]:
+						continue
+					mean += img[h][w]
+			mean = mean/9
+			binary_img[i][j] = 255 if img[i][j]>=mean else 0
+	return binary_img.astype(np.uint8) 																																																																							
+
+########################################## Detection of Harris Corner points #######################################
+			
 
 
 if __name__ == "__main__":
@@ -118,13 +135,14 @@ if __name__ == "__main__":
 	# cv2.imwrite("Denoised.jpg", denoised_img)
 	
 	# Part 3 - Sharpen image
-	img = cv2.imread("Denoised.jpg")
-	sharpened_img = part3(img)
-	cv2.imwrite("Sharpened.jpg", sharpened_img)
+	# img = cv2.imread("Denoised.jpg")
+	# sharpened_img = part3(img)
+	# cv2.imwrite("Sharpened.jpg", sharpened_img)
 
 	# Part 4 - Adaptive Thresholding
-	# img = cv2.imread("Sharpened.jpg")
-	
+	img = cv2.imread("Sharpened.jpg", 0)
+	binary_img = part4(img)
+	cv2.imwrite("Binary.jpg", binary_img)		
 																																																			
 
 	
