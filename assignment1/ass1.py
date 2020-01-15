@@ -206,9 +206,44 @@ def part6(img, connectivity):
 				c = c+1
 	return label
 
+
+########################################## Erosion Dilation ##########################################
+
+def part7(img, kernel):
+	new_img = np.zeros(img.shape)
+	for i in range(img.shape[0]):
+		for j in range(img.shape[1]):
+			flag = 1
+			for l in range((-1*kernel.shape[0]//2)+1, (kernel.shape[0]//2)+1):
+				for m in range((-1*kernel.shape[1]//2)+1, (kernel.shape[0]//2)+1):
+					if(i+l>=0 and j+m>=0 and i+l<img.shape[0] and j+m<img.shape[1]):
+						if(img[i+l][j+m] == 0):
+							flag = 0
+			if flag == 0:
+				new_img[i][j] = 0
+			else:
+				new_img[i][j] = 255
+	return new_img
+
+def part8(img, kernel):
+	new_img = np.zeros(img.shape)
+	for i in range(img.shape[0]):
+		for j in range(img.shape[1]):
+			flag = 1
+			for l in range((-1*kernel.shape[0]//2)+1, (kernel.shape[0]//2)+1):
+				for m in range((-1*kernel.shape[1]//2)+1, (kernel.shape[0]//2)+1):
+					if(i+l>=0 and j+m>=0 and i+l<img.shape[0] and j+m<img.shape[1]):
+						if(img[i+l][j+m] == 255):
+							flag = 0
+			if flag == 0:
+				new_img[i][j] = 255
+			else:
+				new_img[i][j] = 0
+	return new_img
+
 if __name__ == "__main__":
 
-	# # Part 1 - Read image and convert to gray Scaled
+	# Part 1 - Read image and convert to gray Scaled
 	# img = cv2.imread("images/cavepainting1.JPG")
 	# gray = part1(img)
 	# cv2.imwrite("Gray.jpg", gray)
@@ -232,10 +267,25 @@ if __name__ == "__main__":
 	# final_img, cornerList = HarrisCorners(img, int(5), float(0.06), int(10000))
 	# cv2.imwrite("HarrisCorner.jpg", final_img)
 
-	#Part -6 - Connected Components 
-	img = np.array([[0,0,0,0,0],[0,0,1,1,0],[0,0,1,1,0],[0,0,0,1,0],[0,0,0,0,1]])#cv2.imread("sample1.png", 0)
-	print(img.shape)
-	print(img)
-	label = part6(img, 4)
-	print(label)
-	
+	#Part - 6 - Connected Components 
+	# img = np.array([[0,0,0,0,0],[0,0,1,1,0],[0,0,1,1,0],[0,0,0,1,0],[0,0,0,0,1]])#cv2.imread("sample1.png", 0)
+	# print(img.shape)
+	# print(img)
+	# label = part6(img, 4)
+	# print(label)
+
+	#Part - 7 - Erosion
+
+	# img = cv2.imread("input.png", 0)
+	# print(np.unique(img))
+	# kernel = np.ones((5,5))
+	# final_img = part7(img, kernel)
+	# cv2.imwrite("erode.jpg", final_img)
+
+	# #Part - 8 - Dilation
+
+	# img = cv2.imread("input.png", 0)
+	# print(np.unique(img))
+	# kernel = np.ones((5,5))
+	# final_img = part8(img, kernel)
+	# cv2.imwrite("dilate.jpg", final_img)
