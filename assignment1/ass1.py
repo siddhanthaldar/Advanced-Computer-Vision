@@ -86,8 +86,8 @@ def part2(img):
 ########################################### Sharpen Image ##########################################
 def part3(img):
 	kernel = np.array([[-1,-1,-1], 
-					 [-1, 9,-1],
-					 [-1,-1,-1]])
+										 [-1, 9,-1],
+										 [-1,-1,-1]])
 
 	sharpened_img = np.zeros(img.shape)
 	for i in range(img.shape[0]):
@@ -103,21 +103,79 @@ def part3(img):
 
 
 ########################################## Adaptive Thresholding #######################################
+# def part4(img):
+# 	binary_img = np.zeros(img.shape)
+# 	for i in range(img.shape[0]):
+# 		for j in range(img.shape[1]):
+# 			mean = 0
+# 			for k1 in range(-1,2):
+# 				for k2 in range(-1,2):
+# 					h = i + k1
+# 					w = j + k2
+# 					if h<0 or w<0 or h>=img.shape[0] or w>=img.shape[1]:
+# 						continue
+# 					mean += img[h][w]
+# 			mean = mean/9
+# 			binary_img[i][j] = 255 if img[i][j]>=mean else 0
+# 	return binary_img.astype(np.uint8) 																																																																							
+
+def otsu(img):
+	'''
+	Calculating threshold by maximizing between-class variance 
+	(which also has the minimum within-class variance).
+
+	'''
+
+	# Compute histogram
+	histogram = np.zeros(256)
+	h,w = img.shape
+	for i in range(h):
+		for j in range(w):
+			histogram[int(img[i][j])] += 1
+	# histogram /= h*w
+
+	max_variance = float('-inf')
+	threshold = -1
+
+	for i in range(0, 255):
+		
+		# Class 1
+		weight1 = 0
+		mean1 = 0
+		for j in range(i+1):
+			weight1 += histogram[j]
+			mean1 += j * histogram[j]
+		mean1 /= weight1
+		weight1 /= h*w
+
+		# Class 2
+		weight2 = 0
+		mean2 = 0
+		for j in range(i+1, 256):
+			weight2 += histogram[j]
+			mean2 += j * histogram[j]
+		mean2 /= weight2	
+		weight2 /= h*w
+
+		# Between class variance
+		variance = weight1 * weight2 * (weight1 - weight2)**2
+		if variance > max_variance:
+			max_variance = variance
+			threshold = i
+
+	return threshold
+
 def part4(img):
+	# Calculate threshold using otsu algorithm
+	threshold = otsu(img)
+	
+	# Binarize image
 	binary_img = np.zeros(img.shape)
 	for i in range(img.shape[0]):
 		for j in range(img.shape[1]):
-			mean = 0
-			for k1 in range(-1,2):
-				for k2 in range(-1,2):
-					h = i + k1
-					w = j + k2
-					if h<0 or w<0 or h>=img.shape[0] or w>=img.shape[1]:
-						continue
-					mean += img[h][w]
-			mean = mean/9
-			binary_img[i][j] = 255 if img[i][j]>=mean else 0
-	return binary_img.astype(np.uint8) 																																																																							
+			if img[i][j] > threshold:
+				binary_img[i][j] = 255
+	return binary_img.astype(np.uint8)
 
 ########################################## Detection of Harris Corner points #######################################
 
