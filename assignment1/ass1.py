@@ -320,13 +320,13 @@ if __name__ == "__main__":
 	# binary_img = part4(img)
 	# cv2.imwrite("Binary.jpg", binary_img)
 
-	#Part - 5 - Harris Corner
+	# Part - 5 - Harris Corner
 	# img = cv2.imread("checkerBoard.png", 0)
-	# final_img, cornerList = HarrisCorners(img, int(5), float(0.06), int(10000))
+	# final_img, cornerList = HarrisCorners(img, int(5), float(0.18), int(100000))
 	# cv2.imwrite("HarrisCorner.jpg", final_img)
 
 	#Part - 6 - Connected Components 
-	# img = np.array([[0,0,0,0,0],[0,0,1,1,0],[0,0,1,1,0],[0,0,0,1,0],[0,0,0,0,1]])#cv2.imread("sample1.png", 0)
+	# img = np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])#cv2.imread("input.png", 0)
 	# print(img.shape)
 	# print(img)
 	# label = part6(img, 4)
