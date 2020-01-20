@@ -134,9 +134,9 @@ def otsu(img):
 			histogram[int(img[i][j])] += 1
 	# histogram /= h*w
 
+	# Compute threshold by maximizing between class variance
 	max_variance = float('-inf')
 	threshold = -1
-
 	for i in range(0, 255):
 		
 		# Class 1
@@ -179,6 +179,20 @@ def part4(img):
 
 ########################################## Detection of Harris Corner points #######################################
 
+def matlab_style_gauss2D(shape=(3,3),sigma=0.5):
+		"""
+		2D gaussian mask - should give the same result as MATLAB's
+		fspecial('gaussian',[shape],[sigma])
+		"""
+		m,n = [(ss-1.)/2. for ss in shape]
+		y,x = np.ogrid[-m:m+1,-n:n+1]
+		h = np.exp( -(x*x + y*y) / (2.*sigma*sigma) )
+		h[ h < np.finfo(h.dtype).eps*h.max() ] = 0
+		sumh = h.sum()
+		if sumh != 0:
+				h /= sumh
+		return h
+
 def HarrisCorners(img, window_size, k, thresh):
 	"""
 	returns list of corners and new image with corners drawn
@@ -199,6 +213,8 @@ def HarrisCorners(img, window_size, k, thresh):
 	color_img = cv2.cvtColor(newImg, cv2.COLOR_GRAY2RGB)
 	offset = window_size//2
 
+	window = matlab_style_gauss2D(shape=(5,5), sigma=0.5)
+
 	#Loop through image and find our corners
 	for y in range(offset, height-offset):
 		for x in range(offset, width-offset):
@@ -206,6 +222,9 @@ def HarrisCorners(img, window_size, k, thresh):
 			windowIxx = Ixx[y-offset:y+offset+1, x-offset:x+offset+1]
 			windowIxy = Ixy[y-offset:y+offset+1, x-offset:x+offset+1]
 			windowIyy = Iyy[y-offset:y+offset+1, x-offset:x+offset+1]
+			windowIxx = np.multiply(windowIxx, window)
+			windowIxy = np.multiply(windowIxy, window)
+			windowIyy = np.multiply(windowIyy, window)
 			Sxx = windowIxx.sum()
 			Sxy = windowIxy.sum()
 			Syy = windowIyy.sum()
@@ -222,6 +241,48 @@ def HarrisCorners(img, window_size, k, thresh):
 				color_img.itemset((y, x, 2), 255)
 	return color_img, cornerList
 
+# def HarrisCorners(img, window_size, k, thresh):
+# 	"""
+# 	returns list of corners and new image with corners drawn
+# 	window_size: The size (side length) of the sliding window
+# 	k: Harris corner constant. Usually 0.04 - 0.06
+# 	thresh: The threshold above which a corner is counted
+# 	"""
+# 	#Find x and y derivatives
+# 	dy, dx = np.gradient(img)
+# 	Ixx = dx**2
+# 	Ixy = dy*dx
+# 	Iyy = dy**2
+# 	height = img.shape[0]
+# 	width = img.shape[1]
+
+# 	cornerList = []
+# 	newImg = img.copy()
+# 	color_img = cv2.cvtColor(newImg, cv2.COLOR_GRAY2RGB)
+# 	offset = window_size//2
+
+# 	#Loop through image and find our corners
+# 	for y in range(offset, height-offset):
+# 		for x in range(offset, width-offset):
+# 			#Calculate sum of squares
+# 			windowIxx = Ixx[y-offset:y+offset+1, x-offset:x+offset+1]
+# 			windowIxy = Ixy[y-offset:y+offset+1, x-offset:x+offset+1]
+# 			windowIyy = Iyy[y-offset:y+offset+1, x-offset:x+offset+1]
+# 			Sxx = windowIxx.sum()
+# 			Sxy = windowIxy.sum()
+# 			Syy = windowIyy.sum()
+
+# 			det = (Sxx * Syy) - (Sxy**2)
+# 			trace = Sxx + Syy
+# 			r = det - k*(trace**2)
+
+# 			if r > thresh:
+# 				# print x, y, r
+# 				cornerList.append([x, y, r])
+# 				color_img.itemset((y, x, 0), 0)
+# 				color_img.itemset((y, x, 1), 0)
+# 				color_img.itemset((y, x, 2), 255)
+# 	return color_img, cornerList
 
 ########################################## Connected Component ##########################################
 
@@ -267,7 +328,33 @@ def part6(img, connectivity):
 
 ########################################## Erosion Dilation ##########################################
 
-def part7(img, kernel):
+def part7a(img, kernel_size):
+	'''
+	Performing dilation on input image
+
+	'''
+	kernel = np.ones(kernel_size)
+	new_img = np.zeros(img.shape)
+	for i in range(img.shape[0]):
+		for j in range(img.shape[1]):
+			flag = 1
+			for l in range((-1*kernel.shape[0]//2)+1, (kernel.shape[0]//2)+1):
+				for m in range((-1*kernel.shape[1]//2)+1, (kernel.shape[0]//2)+1):
+					if(i+l>=0 and j+m>=0 and i+l<img.shape[0] and j+m<img.shape[1]):
+						if(img[i+l][j+m] == 255):
+							flag = 0
+			if flag == 0:
+				new_img[i][j] = 255
+			else:
+				new_img[i][j] = 0
+	return new_img
+
+def part7b(img, kernel_size):
+	'''
+	Performing erosion on input image
+
+	'''
+	kernel = np.ones(kernel_size)
 	new_img = np.zeros(img.shape)
 	for i in range(img.shape[0]):
 		for j in range(img.shape[1]):
@@ -283,21 +370,26 @@ def part7(img, kernel):
 				new_img[i][j] = 255
 	return new_img
 
-def part8(img, kernel):
-	new_img = np.zeros(img.shape)
-	for i in range(img.shape[0]):
-		for j in range(img.shape[1]):
-			flag = 1
-			for l in range((-1*kernel.shape[0]//2)+1, (kernel.shape[0]//2)+1):
-				for m in range((-1*kernel.shape[1]//2)+1, (kernel.shape[0]//2)+1):
-					if(i+l>=0 and j+m>=0 and i+l<img.shape[0] and j+m<img.shape[1]):
-						if(img[i+l][j+m] == 255):
-							flag = 0
-			if flag == 0:
-				new_img[i][j] = 255
-			else:
-				new_img[i][j] = 0
-	return new_img
+
+def part7c(img, kernel_size):
+	'''
+	Performing closing on input image
+
+	'''
+	closed_img = img.copy()
+	closed_img = part7a(closed_img, kernel_size) # Dilation
+	closed_img = part7b(closed_img, kernel_size) # Erosion
+	return closed_img
+
+def part7d(img, kernel_size):
+	'''
+	Performing closing on input image
+
+	'''
+	opened_img = img.copy()
+	opened_img = part7b(opened_img, kernel_size) # Erosion 
+	opened_img = part7a(opened_img, kernel_size)	# Dilation
+	return opened_img
 
 if __name__ == "__main__":
 
@@ -320,10 +412,10 @@ if __name__ == "__main__":
 	# binary_img = part4(img)
 	# cv2.imwrite("Binary.jpg", binary_img)
 
-	#Part - 5 - Harris Corner
-	# img = cv2.imread("checkerBoard.png", 0)
-	# final_img, cornerList = HarrisCorners(img, int(5), float(0.06), int(10000))
-	# cv2.imwrite("HarrisCorner.jpg", final_img)
+	# Part - 5 - Harris Corner
+	img = cv2.imread("checkerBoard.png", 0)
+	final_img, cornerList = HarrisCorners(img, int(5), float(0.06), int(1e6))
+	cv2.imwrite("HarrisCorner.jpg", final_img)
 
 	#Part - 6 - Connected Components 
 	# img = np.array([[0,0,0,0,0],[0,0,1,1,0],[0,0,1,1,0],[0,0,0,1,0],[0,0,0,0,1]])#cv2.imread("sample1.png", 0)
@@ -332,18 +424,30 @@ if __name__ == "__main__":
 	# label = part6(img, 4)
 	# print(label)
 
-	#Part - 7 - Erosion
-
+	#Part - 7a - Dilation
 	# img = cv2.imread("input.png", 0)
 	# print(np.unique(img))
-	# kernel = np.ones((5,5))
-	# final_img = part7(img, kernel)
+	# kernel_size = (5,5)
+	# final_img = part7a(img, kernel_size)
+	# cv2.imwrite("silate.jpg", final_img)
+
+	# #Part - 7b - Erosion
+	# img = cv2.imread("input.png", 0)
+	# print(np.unique(img))
+	# kernel_size = (5,5)
+	# final_img = part7b(img, kernel_size)
 	# cv2.imwrite("erode.jpg", final_img)
 
-	# #Part - 8 - Dilation
-
+	# #Part - 7c - Closing
 	# img = cv2.imread("input.png", 0)
 	# print(np.unique(img))
-	# kernel = np.ones((5,5))
-	# final_img = part8(img, kernel)
-	# cv2.imwrite("dilate.jpg", final_img)
+	# kernel_size = (5,5)
+	# final_img = part7c(img, kernel_size)
+	# cv2.imwrite("closing.jpg", final_img)
+
+	#Part - 7d - Opening
+	img = cv2.imread("input.png", 0)
+	print(np.unique(img))
+	kernel_size = (5,5)
+	final_img = part7d(img, kernel_size)
+	cv2.imwrite("opening.jpg", final_img)
