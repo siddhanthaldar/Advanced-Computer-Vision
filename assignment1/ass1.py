@@ -77,14 +77,14 @@ class ScaledBilateralFilter:
 				denoised_img[i][j] = self.Gfg(img, i, j)
 		return denoised_img
 
-def part2(img):
+def part2a(img):
 	F = ScaledBilateralFilter(3, 4, 16, 2)
 	img = F.apply_filter(img)
 	return img.astype(np.uint8)
 
 
 ########################################### Sharpen Image ##########################################
-def part3(img):
+def part2b(img):
 	kernel = np.array([[-1,-1,-1], 
 										 [-1, 9,-1],
 										 [-1,-1,-1]])
@@ -102,8 +102,32 @@ def part3(img):
 	return sharpened_img.astype(np.uint8)
 
 
+########################################### Edge Detection ##########################################
+
+def part2c(img, threshold):
+	kernel = np.array([[0, 1, 0], 
+										 [1,-4, 1],
+										 [0, 1, 0]])
+
+	edge_img = np.zeros(img.shape)
+	for i in range(img.shape[0]):
+		for j in range(img.shape[1]):
+			gradient = 0
+			for k1 in range(-1,2):
+				for k2 in range(-1,2):
+					h = i + k1
+					w = j + k2
+					if h<0 or w<0 or h>=img.shape[0] or w>=img.shape[1]:
+						continue		
+					gradient += kernel[k1+1][k2+1] * img[h][w]
+			if gradient>threshold:																																																																							
+				edge_img[i][j] = 255
+	return edge_img.astype(np.uint8)
+	
+
+
 ########################################## Adaptive Thresholding #######################################
-# def part4(img):
+# def part2d(img):
 # 	binary_img = np.zeros(img.shape)
 # 	for i in range(img.shape[0]):
 # 		for j in range(img.shape[1]):
@@ -158,14 +182,14 @@ def otsu(img):
 		weight2 /= h*w
 
 		# Between class variance
-		variance = weight1 * weight2 * (weight1 - weight2)**2
+		variance = weight1 * weight2 * (mean1 - mean2)**2
 		if variance > max_variance:
 			max_variance = variance
 			threshold = i
 
 	return threshold
 
-def part4(img):
+def part2d(img):
 	# Calculate threshold using otsu algorithm
 	threshold = otsu(img)
 	
@@ -193,7 +217,7 @@ def matlab_style_gauss2D(shape=(3,3),sigma=0.5):
 				h /= sumh
 		return h
 
-def HarrisCorners(img, window_size, k, thresh):
+def part2e(img, window_size, k, thresh):
 	"""
 	returns list of corners and new image with corners drawn
 	window_size: The size (side length) of the sliding window
@@ -241,7 +265,7 @@ def HarrisCorners(img, window_size, k, thresh):
 				color_img.itemset((y, x, 2), 255)
 	return color_img, cornerList
 
-# def HarrisCorners(img, window_size, k, thresh):
+# def part2e(img, window_size, k, thresh):
 # 	"""
 # 	returns list of corners and new image with corners drawn
 # 	window_size: The size (side length) of the sliding window
@@ -310,7 +334,7 @@ def DFS(i, j, visited, label, connectivity):
 				label[i+a1[l]][j+a2[l]] = label[i][j]
 				queue.append([i+a1[l], j+a2[l]])
 
-def part6(img, connectivity):
+def part2f(img, connectivity):
 
 	visited = np.zeros(img.shape)
 	label = np.zeros(img.shape)
@@ -328,7 +352,7 @@ def part6(img, connectivity):
 
 ########################################## Erosion Dilation ##########################################
 
-def part7a(img, kernel_size):
+def part2g_1(img, kernel_size):
 	'''
 	Performing dilation on input image
 
@@ -349,7 +373,7 @@ def part7a(img, kernel_size):
 				new_img[i][j] = 0
 	return new_img
 
-def part7b(img, kernel_size):
+def part2g_2(img, kernel_size):
 	'''
 	Performing erosion on input image
 
@@ -371,24 +395,24 @@ def part7b(img, kernel_size):
 	return new_img
 
 
-def part7c(img, kernel_size):
+def part2g_3(img, kernel_size):
 	'''
 	Performing closing on input image
 
 	'''
 	closed_img = img.copy()
-	closed_img = part7a(closed_img, kernel_size) # Dilation
-	closed_img = part7b(closed_img, kernel_size) # Erosion
+	closed_img = part2g_1(closed_img, kernel_size) # Dilation
+	closed_img = part2g_2(closed_img, kernel_size) # Erosion
 	return closed_img
 
-def part7d(img, kernel_size):
+def part2g_4(img, kernel_size):
 	'''
 	Performing closing on input image
 
 	'''
 	opened_img = img.copy()
-	opened_img = part7b(opened_img, kernel_size) # Erosion 
-	opened_img = part7a(opened_img, kernel_size)	# Dilation
+	opened_img = part2g_2(opened_img, kernel_size) # Erosion 
+	opened_img = part2g_1(opened_img, kernel_size)	# Dilation
 	return opened_img
 
 if __name__ == "__main__":
@@ -398,56 +422,62 @@ if __name__ == "__main__":
 	# gray = part1(img)
 	# cv2.imwrite("Gray.jpg", gray)
 
-	# # Part 2 - Scaled	bilateral	filter for	denoising
-	# denoised_img = part2(gray)
+	# # Part 2a - Scaled	bilateral	filter for	denoising
+	# denoised_img = part2a(gray)
 	# cv2.imwrite("Denoised.jpg", denoised_img)
 	
-	# Part 3 - Sharpen image
+	# Part 2b - Sharpen image
 	# img = cv2.imread("Denoised.jpg")
-	# sharpened_img = part3(img)
+	# sharpened_img = part2b(img)
 	# cv2.imwrite("Sharpened.jpg", sharpened_img)
 
-	# Part 4 - Adaptive Thresholding
-	# img = cv2.imread("Sharpened.jpg", 0)
-	# binary_img = part4(img)
+	# Part 2c - Edge Extraction
+	img = cv2.imread("checkerBoard.png", 0)
+	edge_img = part2c(img, 50)
+	cv2.imwrite("Edge.jpg", edge_img)
+
+
+	# Part 2d - Adaptive Thresholding
+	# img = cv2.imread("checkerBoard.png",0)#Sharpened.jpg", 0)
+	# binary_img = part2d(img)
 	# cv2.imwrite("Binary.jpg", binary_img)
 
-	# Part - 5 - Harris Corner
+	# Part - 2e - Harris Corner
 	# img = cv2.imread("checkerBoard.png", 0)
-	# final_img, cornerList = HarrisCorners(img, int(5), float(0.18), int(100000))
+	# final_img, cornerList = part2e(img, int(5), float(0.18), int(100000))
 	# cv2.imwrite("HarrisCorner.jpg", final_img)
 
-	#Part - 6 - Connected Components 
+	#Part - 2f - Connected Components 
 	# img = np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])#cv2.imread("input.png", 0)
 	# print(img.shape)
 	# print(img)
-	# label = part6(img, 4)
+	# label = part2f(img, 4)
 	# print(label)
 
-	#Part - 7a - Dilation
+	#Part - 2g (1) - Dilation
 	# img = cv2.imread("input.png", 0)
 	# print(np.unique(img))
 	# kernel_size = (5,5)
-	# final_img = part7a(img, kernel_size)
+	# final_img = part2g_1(img, kernel_size)
 	# cv2.imwrite("silate.jpg", final_img)
 
-	# #Part - 7b - Erosion
+	# #Part - 2g (2) - Erosion
 	# img = cv2.imread("input.png", 0)
 	# print(np.unique(img))
 	# kernel_size = (5,5)
-	# final_img = part7b(img, kernel_size)
+	# final_img = part2g_2(img, kernel_size)
 	# cv2.imwrite("erode.jpg", final_img)
 
-	# #Part - 7c - Closing
+	# #Part - 2g (3) - Closing
 	# img = cv2.imread("input.png", 0)
 	# print(np.unique(img))
 	# kernel_size = (5,5)
-	# final_img = part7c(img, kernel_size)
+	# final_img = part2g_3(img, kernel_size)
 	# cv2.imwrite("closing.jpg", final_img)
 
-	#Part - 7d - Opening
-	img = cv2.imread("input.png", 0)
-	print(np.unique(img))
-	kernel_size = (5,5)
-	final_img = part7d(img, kernel_size)
-	cv2.imwrite("opening.jpg", final_img)
+	#Part - 2g (4) - Opening
+	# img = cv2.imread("input.png", 0)
+	# print(np.unique(img))
+	# kernel_size = (5,5)
+	# final_img = part2g_4(img, kernel_size)
+	# cv2.imwrite("opening.jpg", final_img)
