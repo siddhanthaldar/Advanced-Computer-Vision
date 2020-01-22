@@ -377,7 +377,7 @@ def part2g_4(img, kernel_size):
 
 if __name__ == "__main__":
 	os.makedirs("output", exist_ok = True)
-	vis = input("If you want to visualise output PRESS 1 else 0: ")
+	vis = int(input("If you want to visualise output PRESS 1 else 0: "))
 	# Part 1 - Read image and convert to gray Scaled
 	print("Converting image to Grayscale")
 	img = cv2.imread("images/cavepainting1.JPG")
@@ -404,116 +404,117 @@ if __name__ == "__main__":
 	cv2.imwrite("output/Denoised.jpg", denoised_img)
 	
 	# # Part 2b - Sharpen image
-	# print("Sharpening Image")
-	# denoised_img = cv2.imread("Denoised.jpg", 0)
-	# sharpened_img = part2b(denoised_img)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", denoised_img)
-	# 	cv2.imshow("Sharpened", sharpened_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	print("Sharpening Image")
+	denoised_img = cv2.imread("Denoised.jpg", 0)
+	sharpened_img = part2b(denoised_img)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", denoised_img)
+		cv2.imshow("Sharpened", sharpened_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/Sharpened.jpg", sharpened_img)
+	cv2.imwrite("output/Sharpened.jpg", sharpened_img)
 
-	# # Part 2d - Adaptive Thresholding
-	# print("Running Adaptive Thresholding Algorithm")
-	# binary_img = part2d(sharpened_img)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", sharpened_img)
-	# 	cv2.imshow("Thresholded Image", binary_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	# Part 2d - Adaptive Thresholding
+	print("Running Adaptive Thresholding Algorithm")
+	binary_img = part2d(sharpened_img)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", sharpened_img)
+		cv2.imshow("Thresholded Image", binary_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/Binary.jpg", binary_img)
+	cv2.imwrite("output/Binary.jpg", binary_img)
 
+	img = binary_img
 	# # Part 2c - Edge Extraction
-	# print("Running Edge detection algo")
-	# img = cv2.imread("checkerBoard.png", 0)
-	# edge_img = part2c(img, 50)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", img)
-	# 	cv2.imshow("Edge Detection", edge_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	print("Running Edge detection algo")
+	# # img = cv2.imread("checkerBoard.png", 0)
+	edge_img = part2c(binary_img, 50)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Edge Detection", edge_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/Edge.jpg", edge_img)
+	cv2.imwrite("output/Edge.jpg", edge_img)
 
-	# # Part - 2e - Harris Corner
-	# print("Running Harris Corner Detection Algorithm")
-	# final_img, cornerList = part2e(img, int(5), float(0.18), int(10000))
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", img)
-	# 	cv2.imshow("Edge Detection", final_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	# Part - 2e - Harris Corner
+	print("Running Harris Corner Detection Algorithm")
+	final_img, cornerList = part2e(img, int(5), float(0.18), int(10000))
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Edge Detection", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/HarrisCorner.jpg", final_img)
+	cv2.imwrite("output/HarrisCorner.jpg", final_img)
 
 	# #Part - 2f - Connected Components 
 	# img = cv2.imread("input.png", 0) #np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])
-	# label, lines = part2f(img, 4)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", img)
-	# 	cv2.imshow("Connected Line", lines)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	label, lines = part2f(img, 4)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Connected Line", lines)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/Connected_lines.jpg", lines)
-	# # print(np.unique(label))
+	cv2.imwrite("output/Connected_lines.jpg", lines)
+	# print(np.unique(label))
 
-	# #Part - 2g (1) - Dilation
-	# print("Running Dilation")
-	# kernel_size = (5,5)
-	# final_img = part2g_1(img, kernel_size)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", img)
-	# 	cv2.imshow("Dilated Image", final_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	#Part - 2g (1) - Dilation
+	print("Running Dilation")
+	kernel_size = (5,5)
+	final_img = part2g_1(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Dilated Image", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/dilate.jpg", final_img)
+	cv2.imwrite("output/dilate.jpg", final_img)
 
-	# #Part - 2g (2) - Erosion
-	# print("Running Erosion")
-	# kernel_size = (5,5)
-	# final_img = part2g_2(img, kernel_size)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", img)
-	# 	cv2.imshow("Eroded Image", final_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	#Part - 2g (2) - Erosion
+	print("Running Erosion")
+	kernel_size = (5,5)
+	final_img = part2g_2(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Eroded Image", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/erode.jpg", final_img)
+	cv2.imwrite("output/erode.jpg", final_img)
 
-	# #Part - 2g (3) - Closing
-	# print("Running Closing")
-	# kernel_size = (5,5)
-	# final_img = part2g_3(img, kernel_size)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", img)
-	# 	cv2.imshow("Closing ", final_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	#Part - 2g (3) - Closing
+	print("Running Closing")
+	kernel_size = (5,5)
+	final_img = part2g_3(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Closing ", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/closing.jpg", final_img)
+	cv2.imwrite("output/closing.jpg", final_img)
 
-	# #Part - 2g (4) - Opening
-	# print("Running Opening")
-	# kernel_size = (5,5)
-	# final_img = part2g_4(img, kernel_size)
-	# if vis:
-	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", img)
-	# 	cv2.imshow("Opening", final_img)
-	# 	cv2.waitKey()
-	# 	cv2.destroyAllWindows()
+	#Part - 2g (4) - Opening
+	print("Running Opening")
+	kernel_size = (5,5)
+	final_img = part2g_4(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Opening", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/opening.jpg", final_img)
+	cv2.imwrite("output/opening.jpg", final_img)
