@@ -73,12 +73,11 @@ class ScaledBilateralFilter:
 		denoised_img = np.zeros(img.shape)
 		for i in range(0,img.shape[0]):
 			for j in range(0,img.shape[1]):
-				print(i,j)
 				denoised_img[i][j] = self.Gfg(img, i, j)
 		return denoised_img
 
-def part2a(img):
-	F = ScaledBilateralFilter(3, 4, 16, 2)
+def part2a(img, K, sigma_s, sigma_r, sigma_G):
+	F = ScaledBilateralFilter(K, sigma_s, sigma_r, sigma_G)
 	img = F.apply_filter(img)
 	return img.astype(np.uint8)
 
@@ -316,7 +315,7 @@ def isokay(a, b, i, j, img, visited):
 	else:
 		return 0
 
-def DFS(i, j, visited, label, connectivity):
+def DFS(i, j, img, visited, label, connectivity):
 	if connectivity == 4:
 		a1 = [-1, 0, 1, 0]
 		a2 = [0, 1, 0, -1]
@@ -327,27 +326,45 @@ def DFS(i, j, visited, label, connectivity):
 	queue.append([i,j])
 	while(len(queue) != 0):
 		i , j = queue.pop(0)
-		for l in range (len(a1)):
+		for l in range(len(a1)):
 			if(isokay(i, j, i+a1[l], j+a2[l], img, visited)):
 				# print(i, j, i+a1[l], j+a2[l])
 				visited[i+a1[l]][j+a2[l]] = 1
 				label[i+a1[l]][j+a2[l]] = label[i][j]
 				queue.append([i+a1[l], j+a2[l]])
 
+def generateLine(labels):
+	lines = np.zeros(labels.shape)
+	
+	# Horizontal Scan
+	for i in range(labels.shape[0]):
+		for j in range(labels.shape[1]-1):
+			if labels[i][j] != labels[i][j+1]:
+				lines[i][j] = 255
+					
+	# Vertical Scan
+	for i in range(labels.shape[0]-1):
+		for j in range(labels.shape[1]):
+			if labels[i][j] != labels[i+1][j]:
+				lines[i][j] = 255
+
+	return lines.astype(np.uint8)
+	
+
 def part2f(img, connectivity):
 
 	visited = np.zeros(img.shape)
-	label = np.zeros(img.shape)
+	labels = np.zeros(img.shape)
 	c = 0
 	for i in range (img.shape[0]):
 		for j in range (img.shape[1]):
 			if(visited[i][j] == 0):
 				# print(i, j)
 				visited[i][j] = 1
-				label[i][j] = c
-				DFS(i, j, visited, label, connectivity)
+				labels[i][j] = c
+				DFS(i, j, img, visited, labels, connectivity)
 				c = c+1
-	return label
+	return labels, generateLine(labels) 
 
 
 ########################################## Erosion Dilation ##########################################
@@ -417,13 +434,13 @@ def part2g_4(img, kernel_size):
 
 if __name__ == "__main__":
 
-	# Part 1 - Read image and convert to gray Scaled
+	# # Part 1 - Read image and convert to gray Scaled
 	# img = cv2.imread("images/cavepainting1.JPG")
 	# gray = part1(img)
 	# cv2.imwrite("Gray.jpg", gray)
 
 	# # Part 2a - Scaled	bilateral	filter for	denoising
-	# denoised_img = part2a(gray)
+	# denoised_img = part2a(gray, 5, 4, 16, 2)
 	# cv2.imwrite("Denoised.jpg", denoised_img)
 	
 	# Part 2b - Sharpen image
@@ -432,15 +449,16 @@ if __name__ == "__main__":
 	# cv2.imwrite("Sharpened.jpg", sharpened_img)
 
 	# Part 2c - Edge Extraction
-	img = cv2.imread("checkerBoard.png", 0)
-	edge_img = part2c(img, 50)
-	cv2.imwrite("Edge.jpg", edge_img)
+	# img = cv2.imread("checkerBoard.png", 0)
+	# edge_img = part2c(img, 50)
+	# cv2.imwrite("Edge.jpg", edge_img)
 
 
 	# Part 2d - Adaptive Thresholding
-	# img = cv2.imread("checkerBoard.png",0)#Sharpened.jpg", 0)
-	# binary_img = part2d(img)
-	# cv2.imwrite("Binary.jpg", binary_img)
+	img = cv2.imread("Sharpened.jpg", 0)
+	binary_img = part2d(img)
+	cv2.imwrite("Binary.jpg", binary_img)
+	print(np.unique(binary_img))
 
 	# Part - 2e - Harris Corner
 	# img = cv2.imread("checkerBoard.png", 0)
@@ -448,11 +466,14 @@ if __name__ == "__main__":
 	# cv2.imwrite("HarrisCorner.jpg", final_img)
 
 	#Part - 2f - Connected Components 
-	# img = np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])#cv2.imread("input.png", 0)
+	# img = cv2.imread("input.png", 0) #np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])
 	# print(img.shape)
 	# print(img)
-	# label = part2f(img, 4)
-	# print(label)
+	label, lines = part2f(binary_img, 4)
+	cv2.imwrite("Connected_lines.jpg", lines)
+	print(lines.shape)
+	print(lines.shape[0] * lines.shape[1])
+	print(np.unique(label))
 
 	#Part - 2g (1) - Dilation
 	# img = cv2.imread("input.png", 0)
