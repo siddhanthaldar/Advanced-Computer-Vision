@@ -26,14 +26,14 @@ class ScaledBilateralFilter:
 		self.sigma_G = sigma_G
 
 	def Gg(self,x1,y1,x2,y2):
-		scale = 1.0 / (2 * math.pi * self.sigma_G * self.sigma_G)
-		return scale * math.exp(-1.0 * ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)) / (2 * self.sigma_G * self.sigma_G))
+		scale = 1.0 / (2 * np.pi * self.sigma_G * self.sigma_G)
+		return scale * np.exp(-1.0 * ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)) / (2 * self.sigma_G * self.sigma_G))
 
 	def Gs(self,x1,y1,x2,y2):
-		return math.exp(-1.0 * ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)) / (2 * self.sigma_s * self.sigma_s))
+		return np.exp(-1.0 * ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)) / (2 * self.sigma_s * self.sigma_s))
 
 	def Gr(self,I1, I2):
-		return math.exp(-1.0*(I1-I2)*(I1-I2) / (2 * self.sigma_r * self.sigma_r))
+		return np.exp(-1.0*(I1-I2)*(I1-I2) / (2 * self.sigma_r * self.sigma_r))
 
 	def Ig(self,img, h1, w1):
 		ans = 0
@@ -50,15 +50,6 @@ class ScaledBilateralFilter:
 		
 		# Compute Numerator
 		numerator = 0
-		for i in range(-self.k//2, self.k//2):
-			for j in range(-self.k//2, self.k//2):
-				h2 = h1 + i
-				w2 = w1 + j
-				if h2<0 or w2<0 or h2>=img.shape[0] or w2>=img.shape[1]:
-					continue
-				numerator += self.Gs(h1,w1,h2,w2) * self.Gr(self.Ig(img,h2,w2), img[h1][w1]) * img[h2][w2]		
-
-		# Compute Denominator
 		denominator = 0
 		for i in range(-self.k//2, self.k//2):
 			for j in range(-self.k//2, self.k//2):
@@ -66,7 +57,19 @@ class ScaledBilateralFilter:
 				w2 = w1 + j
 				if h2<0 or w2<0 or h2>=img.shape[0] or w2>=img.shape[1]:
 					continue
-				denominator += self.Gs(h1,w1,h2,w2) * self.Gr(self.Ig(img,h2,w2), img[h1][w1])
+				val = self.Gs(h1,w1,h2,w2) * self.Gr(self.Ig(img,h2,w2), img[h1][w1])
+				numerator += val * img[h2][w2]		
+				denominator += val
+
+		# # Compute Denominator
+		# denominator = 0
+		# for i in range(-self.k//2, self.k//2):
+		# 	for j in range(-self.k//2, self.k//2):
+		# 		h2 = h1 + i
+		# 		w2 = w1 + j
+		# 		if h2<0 or w2<0 or h2>=img.shape[0] or w2>=img.shape[1]:
+		# 			continue
+		# 		denominator += self.Gs(h1,w1,h2,w2) * self.Gr(self.Ig(img,h2,w2), img[h1][w1])
 
 		return numerator/denominator
 
@@ -123,6 +126,9 @@ def part2c(img, threshold):
 			if gradient>threshold:																																																																							
 				edge_img[i][j] = 255
 	return edge_img.astype(np.uint8)																																																																						
+
+
+########################################### Adaptive Thresholding ##########################################
 
 def otsu(img):
 	'''
@@ -304,7 +310,7 @@ def part2f(img, connectivity):
 	return labels, generateLine(labels) 
 
 
-########################################## Erosion Dilation ##########################################
+################################# Erosion, Dilation, Opening, Closing ##################################
 
 def part2g_1(img, kernel_size):
 	'''
@@ -386,128 +392,128 @@ if __name__ == "__main__":
 	cv2.imwrite("output/Gray.jpg", gray)
 
 	# Part 2a - Scaled	bilateral	filter for	denoising
-	# print("Running Scaled Bilateral filter for Denoising")
-	# denoised_img = part2a(gray, 5, 4, 16, 2)
+	print("Running Scaled Bilateral filter for Denoising")
+	denoised_img = part2a(gray, 3, 4, 16, 2)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", gray)
+		cv2.imshow("Denoised", denoised_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/Denoised.jpg", denoised_img)
+	
+	# # Part 2b - Sharpen image
+	# print("Sharpening Image")
+	# denoised_img = cv2.imread("Denoised.jpg", 0)
+	# sharpened_img = part2b(denoised_img)
 	# if vis:
 	# 	print("To close window press any key")
-	# 	cv2.imshow("Input", gray)
-	# 	cv2.imshow("Denoised", denoised_img)
+	# 	cv2.imshow("Input", denoised_img)
+	# 	cv2.imshow("Sharpened", sharpened_img)
 	# 	cv2.waitKey()
 	# 	cv2.destroyAllWindows()
 
-	# cv2.imwrite("output/Denoised.jpg", denoised_img)
-	
-	# Part 2b - Sharpen image
-	print("Sharpening Image")
-	denoised_img = cv2.imread("Denoised.jpg", 0)
-	sharpened_img = part2b(denoised_img)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", denoised_img)
-		cv2.imshow("Sharpened", sharpened_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/Sharpened.jpg", sharpened_img)
 
-	cv2.imwrite("output/Sharpened.jpg", sharpened_img)
+	# # Part 2d - Adaptive Thresholding
+	# print("Running Adaptive Thresholding Algorithm")
+	# binary_img = part2d(sharpened_img)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", sharpened_img)
+	# 	cv2.imshow("Thresholded Image", binary_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	# Part 2d - Adaptive Thresholding
-	print("Running Adaptive Thresholding Algorithm")
-	binary_img = part2d(sharpened_img)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", sharpened_img)
-		cv2.imshow("Thresholded Image", binary_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/Binary.jpg", binary_img)
 
-	cv2.imwrite("output/Binary.jpg", binary_img)
+	# # Part 2c - Edge Extraction
+	# print("Running Edge detection algo")
+	# img = cv2.imread("checkerBoard.png", 0)
+	# edge_img = part2c(img, 50)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", img)
+	# 	cv2.imshow("Edge Detection", edge_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	# Part 2c - Edge Extraction
-	print("Running Edge detection algo")
-	img = cv2.imread("checkerBoard.png", 0)
-	edge_img = part2c(img, 50)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", img)
-		cv2.imshow("Edge Detection", edge_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/Edge.jpg", edge_img)
 
-	cv2.imwrite("output/Edge.jpg", edge_img)
+	# # Part - 2e - Harris Corner
+	# print("Running Harris Corner Detection Algorithm")
+	# final_img, cornerList = part2e(img, int(5), float(0.18), int(10000))
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", img)
+	# 	cv2.imshow("Edge Detection", final_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	# Part - 2e - Harris Corner
-	print("Running Harris Corner Detection Algorithm")
-	final_img, cornerList = part2e(img, int(5), float(0.18), int(10000))
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", img)
-		cv2.imshow("Edge Detection", final_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/HarrisCorner.jpg", final_img)
 
-	cv2.imwrite("output/HarrisCorner.jpg", final_img)
+	# #Part - 2f - Connected Components 
+	# img = cv2.imread("input.png", 0) #np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])
+	# label, lines = part2f(img, 4)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", img)
+	# 	cv2.imshow("Connected Line", lines)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	#Part - 2f - Connected Components 
-	img = cv2.imread("input.png", 0) #np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])
-	label, lines = part2f(img, 4)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", img)
-		cv2.imshow("Connected Line", lines)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/Connected_lines.jpg", lines)
+	# # print(np.unique(label))
 
-	cv2.imwrite("output/Connected_lines.jpg", lines)
-	# print(np.unique(label))
+	# #Part - 2g (1) - Dilation
+	# print("Running Dilation")
+	# kernel_size = (5,5)
+	# final_img = part2g_1(img, kernel_size)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", img)
+	# 	cv2.imshow("Dilated Image", final_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	#Part - 2g (1) - Dilation
-	print("Running Dilation")
-	kernel_size = (5,5)
-	final_img = part2g_1(img, kernel_size)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", img)
-		cv2.imshow("Dilated Image", final_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/dilate.jpg", final_img)
 
-	cv2.imwrite("output/dilate.jpg", final_img)
+	# #Part - 2g (2) - Erosion
+	# print("Running Erosion")
+	# kernel_size = (5,5)
+	# final_img = part2g_2(img, kernel_size)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", img)
+	# 	cv2.imshow("Eroded Image", final_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	#Part - 2g (2) - Erosion
-	print("Running Erosion")
-	kernel_size = (5,5)
-	final_img = part2g_2(img, kernel_size)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", img)
-		cv2.imshow("Eroded Image", final_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/erode.jpg", final_img)
 
-	cv2.imwrite("output/erode.jpg", final_img)
+	# #Part - 2g (3) - Closing
+	# print("Running Closing")
+	# kernel_size = (5,5)
+	# final_img = part2g_3(img, kernel_size)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", img)
+	# 	cv2.imshow("Closing ", final_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	#Part - 2g (3) - Closing
-	print("Running Closing")
-	kernel_size = (5,5)
-	final_img = part2g_3(img, kernel_size)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", img)
-		cv2.imshow("Closing ", final_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
+	# cv2.imwrite("output/closing.jpg", final_img)
 
-	cv2.imwrite("output/closing.jpg", final_img)
+	# #Part - 2g (4) - Opening
+	# print("Running Opening")
+	# kernel_size = (5,5)
+	# final_img = part2g_4(img, kernel_size)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", img)
+	# 	cv2.imshow("Opening", final_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
 
-	#Part - 2g (4) - Opening
-	print("Running Opening")
-	kernel_size = (5,5)
-	final_img = part2g_4(img, kernel_size)
-	if vis:
-		print("To close window press any key")
-		cv2.imshow("Input", img)
-		cv2.imshow("Opening", final_img)
-		cv2.waitKey()
-		cv2.destroyAllWindows()
-
-	cv2.imwrite("output/opening.jpg", final_img)
+	# cv2.imwrite("output/opening.jpg", final_img)
