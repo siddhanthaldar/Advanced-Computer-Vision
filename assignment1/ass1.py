@@ -1,6 +1,7 @@
 import numpy as np 
 import cv2
 import math
+import os
 
 #################################### Convert image to gray scale #########################################
 def part1(img):
@@ -105,8 +106,8 @@ def part2b(img):
 
 def part2c(img, threshold):
 	kernel = np.array([[0, 1, 0], 
-										 [1,-4, 1],
-										 [0, 1, 0]])
+						[1,-4, 1],
+						[0, 1, 0]])
 
 	edge_img = np.zeros(img.shape)
 	for i in range(img.shape[0]):
@@ -121,26 +122,7 @@ def part2c(img, threshold):
 					gradient += kernel[k1+1][k2+1] * img[h][w]
 			if gradient>threshold:																																																																							
 				edge_img[i][j] = 255
-	return edge_img.astype(np.uint8)
-	
-
-
-########################################## Adaptive Thresholding #######################################
-# def part2d(img):
-# 	binary_img = np.zeros(img.shape)
-# 	for i in range(img.shape[0]):
-# 		for j in range(img.shape[1]):
-# 			mean = 0
-# 			for k1 in range(-1,2):
-# 				for k2 in range(-1,2):
-# 					h = i + k1
-# 					w = j + k2
-# 					if h<0 or w<0 or h>=img.shape[0] or w>=img.shape[1]:
-# 						continue
-# 					mean += img[h][w]
-# 			mean = mean/9
-# 			binary_img[i][j] = 255 if img[i][j]>=mean else 0
-# 	return binary_img.astype(np.uint8) 																																																																							
+	return edge_img.astype(np.uint8)																																																																						
 
 def otsu(img):
 	'''
@@ -220,10 +202,9 @@ def part2e(img, window_size, k, thresh):
 	"""
 	returns list of corners and new image with corners drawn
 	window_size: The size (side length) of the sliding window
-	k: Harris corner constant. Usually 0.04 - 0.06
+	k: Harris corner constant.
 	thresh: The threshold above which a corner is counted
 	"""
-	#Find x and y derivatives
 	dy, dx = np.gradient(img)
 	Ixx = dx**2
 	Ixy = dy*dx
@@ -257,55 +238,11 @@ def part2e(img, window_size, k, thresh):
 			r = det - k*(trace**2)
 
 			if r > thresh:
-				# print x, y, r
 				cornerList.append([x, y, r])
 				color_img.itemset((y, x, 0), 0)
 				color_img.itemset((y, x, 1), 0)
 				color_img.itemset((y, x, 2), 255)
 	return color_img, cornerList
-
-# def part2e(img, window_size, k, thresh):
-# 	"""
-# 	returns list of corners and new image with corners drawn
-# 	window_size: The size (side length) of the sliding window
-# 	k: Harris corner constant. Usually 0.04 - 0.06
-# 	thresh: The threshold above which a corner is counted
-# 	"""
-# 	#Find x and y derivatives
-# 	dy, dx = np.gradient(img)
-# 	Ixx = dx**2
-# 	Ixy = dy*dx
-# 	Iyy = dy**2
-# 	height = img.shape[0]
-# 	width = img.shape[1]
-
-# 	cornerList = []
-# 	newImg = img.copy()
-# 	color_img = cv2.cvtColor(newImg, cv2.COLOR_GRAY2RGB)
-# 	offset = window_size//2
-
-# 	#Loop through image and find our corners
-# 	for y in range(offset, height-offset):
-# 		for x in range(offset, width-offset):
-# 			#Calculate sum of squares
-# 			windowIxx = Ixx[y-offset:y+offset+1, x-offset:x+offset+1]
-# 			windowIxy = Ixy[y-offset:y+offset+1, x-offset:x+offset+1]
-# 			windowIyy = Iyy[y-offset:y+offset+1, x-offset:x+offset+1]
-# 			Sxx = windowIxx.sum()
-# 			Sxy = windowIxy.sum()
-# 			Syy = windowIyy.sum()
-
-# 			det = (Sxx * Syy) - (Sxy**2)
-# 			trace = Sxx + Syy
-# 			r = det - k*(trace**2)
-
-# 			if r > thresh:
-# 				# print x, y, r
-# 				cornerList.append([x, y, r])
-# 				color_img.itemset((y, x, 0), 0)
-# 				color_img.itemset((y, x, 1), 0)
-# 				color_img.itemset((y, x, 2), 255)
-# 	return color_img, cornerList
 
 ########################################## Connected Component ##########################################
 
@@ -433,72 +370,144 @@ def part2g_4(img, kernel_size):
 	return opened_img
 
 if __name__ == "__main__":
+	os.makedirs("output", exist_ok = True)
+	vis = input("If you want to visualise output PRESS 1 else 0: ")
+	# Part 1 - Read image and convert to gray Scaled
+	print("Converting image to Grayscale")
+	img = cv2.imread("images/cavepainting1.JPG")
+	gray = part1(img)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("gray scale", gray)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# # Part 1 - Read image and convert to gray Scaled
-	# img = cv2.imread("images/cavepainting1.JPG")
-	# gray = part1(img)
-	# cv2.imwrite("Gray.jpg", gray)
+	cv2.imwrite("output/Gray.jpg", gray)
 
-	# # Part 2a - Scaled	bilateral	filter for	denoising
+	# Part 2a - Scaled	bilateral	filter for	denoising
+	# print("Running Scaled Bilateral filter for Denoising")
 	# denoised_img = part2a(gray, 5, 4, 16, 2)
-	# cv2.imwrite("Denoised.jpg", denoised_img)
+	# if vis:
+	# 	print("To close window press any key")
+	# 	cv2.imshow("Input", gray)
+	# 	cv2.imshow("Denoised", denoised_img)
+	# 	cv2.waitKey()
+	# 	cv2.destroyAllWindows()
+
+	# cv2.imwrite("output/Denoised.jpg", denoised_img)
 	
 	# Part 2b - Sharpen image
-	# img = cv2.imread("Denoised.jpg")
-	# sharpened_img = part2b(img)
-	# cv2.imwrite("Sharpened.jpg", sharpened_img)
+	print("Sharpening Image")
+	denoised_img = cv2.imread("Denoised.jpg", 0)
+	sharpened_img = part2b(denoised_img)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", denoised_img)
+		cv2.imshow("Sharpened", sharpened_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# Part 2c - Edge Extraction
-	# img = cv2.imread("checkerBoard.png", 0)
-	# edge_img = part2c(img, 50)
-	# cv2.imwrite("Edge.jpg", edge_img)
-
+	cv2.imwrite("output/Sharpened.jpg", sharpened_img)
 
 	# Part 2d - Adaptive Thresholding
-	img = cv2.imread("Sharpened.jpg", 0)
-	binary_img = part2d(img)
-	cv2.imwrite("Binary.jpg", binary_img)
-	print(np.unique(binary_img))
+	print("Running Adaptive Thresholding Algorithm")
+	binary_img = part2d(sharpened_img)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", sharpened_img)
+		cv2.imshow("Thresholded Image", binary_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/Binary.jpg", binary_img)
+
+	# Part 2c - Edge Extraction
+	print("Running Edge detection algo")
+	img = cv2.imread("checkerBoard.png", 0)
+	edge_img = part2c(img, 50)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Edge Detection", edge_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/Edge.jpg", edge_img)
 
 	# Part - 2e - Harris Corner
-	# img = cv2.imread("checkerBoard.png", 0)
-	# final_img, cornerList = part2e(img, int(5), float(0.18), int(100000))
-	# cv2.imwrite("HarrisCorner.jpg", final_img)
+	print("Running Harris Corner Detection Algorithm")
+	final_img, cornerList = part2e(img, int(5), float(0.18), int(10000))
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Edge Detection", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/HarrisCorner.jpg", final_img)
 
 	#Part - 2f - Connected Components 
-	# img = cv2.imread("input.png", 0) #np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])
-	# print(img.shape)
-	# print(img)
-	label, lines = part2f(binary_img, 4)
-	cv2.imwrite("Connected_lines.jpg", lines)
-	print(lines.shape)
-	print(lines.shape[0] * lines.shape[1])
-	print(np.unique(label))
+	img = cv2.imread("input.png", 0) #np.array([[0,0,0,0,0,0,0,0,0,0],[0,1,1,1,0,0,1,1,1,0],[0,1,1,1,0,0,1,1,1,0],[1,0,0,1,1,0,0,0,1,0],[0,0,0,0,1,0,0,0,0,1]])
+	label, lines = part2f(img, 4)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Connected Line", lines)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/Connected_lines.jpg", lines)
+	# print(np.unique(label))
 
 	#Part - 2g (1) - Dilation
-	# img = cv2.imread("input.png", 0)
-	# print(np.unique(img))
-	# kernel_size = (5,5)
-	# final_img = part2g_1(img, kernel_size)
-	# cv2.imwrite("silate.jpg", final_img)
+	print("Running Dilation")
+	kernel_size = (5,5)
+	final_img = part2g_1(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Dilated Image", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
 
-	# #Part - 2g (2) - Erosion
-	# img = cv2.imread("input.png", 0)
-	# print(np.unique(img))
-	# kernel_size = (5,5)
-	# final_img = part2g_2(img, kernel_size)
-	# cv2.imwrite("erode.jpg", final_img)
+	cv2.imwrite("output/dilate.jpg", final_img)
 
-	# #Part - 2g (3) - Closing
-	# img = cv2.imread("input.png", 0)
-	# print(np.unique(img))
-	# kernel_size = (5,5)
-	# final_img = part2g_3(img, kernel_size)
-	# cv2.imwrite("closing.jpg", final_img)
+	#Part - 2g (2) - Erosion
+	print("Running Erosion")
+	kernel_size = (5,5)
+	final_img = part2g_2(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Eroded Image", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/erode.jpg", final_img)
+
+	#Part - 2g (3) - Closing
+	print("Running Closing")
+	kernel_size = (5,5)
+	final_img = part2g_3(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Closing ", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/closing.jpg", final_img)
 
 	#Part - 2g (4) - Opening
-	# img = cv2.imread("input.png", 0)
-	# print(np.unique(img))
-	# kernel_size = (5,5)
-	# final_img = part2g_4(img, kernel_size)
-	# cv2.imwrite("opening.jpg", final_img)
+	print("Running Opening")
+	kernel_size = (5,5)
+	final_img = part2g_4(img, kernel_size)
+	if vis:
+		print("To close window press any key")
+		cv2.imshow("Input", img)
+		cv2.imshow("Opening", final_img)
+		cv2.waitKey()
+		cv2.destroyAllWindows()
+
+	cv2.imwrite("output/opening.jpg", final_img)
