@@ -26,14 +26,14 @@ class ScaledBilateralFilter:
 		self.sigma_G = sigma_G
 
 	def Gg(self,x1,y1,x2,y2):
-		scale = 1.0 / (2 * np.pi * self.sigma_G * self.sigma_G)
-		return scale * np.exp(-1.0 * ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)) / (2 * self.sigma_G * self.sigma_G))
+		scale = 1.0 / (2 * np.pi * self.sigma_G**2)
+		return scale * np.exp(-1.0 * ((x1-x2)**2 + (y1-y2)**2) / (2 * self.sigma_G**2))
 
 	def Gs(self,x1,y1,x2,y2):
-		return np.exp(-1.0 * ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)) / (2 * self.sigma_s * self.sigma_s))
+		return np.exp(-1.0 * ((x1-x2)**2 + (y1-y2)**2) / (2 * self.sigma_s**2))
 
 	def Gr(self,I1, I2):
-		return np.exp(-1.0*(I1-I2)*(I1-I2) / (2 * self.sigma_r * self.sigma_r))
+		return np.exp(-1.0*(I1-I2)**2 / (2 * self.sigma_r**2))
 
 	def Ig(self,img, h1, w1):
 		ans = 0
