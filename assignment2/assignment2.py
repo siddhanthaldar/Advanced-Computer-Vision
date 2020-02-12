@@ -4,6 +4,7 @@ import numpy as np
 #################### Part 1 : GUI for obtaning 2D Projective Space Representation ################
 
 global points
+global vanish_line
 
 def get_point(event,x,y,flags,param):
   global points
@@ -36,7 +37,7 @@ def part1(image, numLines):
 	P2 = []
 	
 	global points	
-	make_line = input('Press 1 for drawing line segments on image, 0 for exiting GUI :')
+	make_line = int(input('Press 1 for drawing line segments on image, 0 for exiting GUI :'))
 
 	while make_line:
 		print("Double click on 2 points on the image and then close the window")
@@ -45,9 +46,10 @@ def part1(image, numLines):
 		show = True
 		while show:
 			show = imshow('image', img, numLines)
+		# print(points)
 		cv2.line(img, (points[0][0], points[0][1]), (points[1][0], points[1][1]), (0,255,0), 2)
 
-		for i in range(len(points)/2):
+		for i in range(int(len(points)/2)):
 			x1, y1, x2, y2 = float(points[2*i][0]), float(points[2*i][1]), float(points[2*i+1][0]), float(points[2*i+1][1])
 			cv2.line(img, (int(x1), int(y1)), (int(x2),int(y2)), (0,255,0), 2)
 			
@@ -56,12 +58,13 @@ def part1(image, numLines):
 			# b = x1 - x2
 			# c = (x2-x1)*y1 - (y2-y1)*x1
 			p = np.cross([x1,y1,1], [x2,y2,1])
+			# print(p)
 			p /= p[2]
 			P2.append(p)
 
-		make_line = input('Press 1 for drawing line segments on image, 0 for exiting GUI :')
+		make_line = int(input('Press 1 for drawing line segments on image, 0 for exiting GUI :'))
 
-	cv2.imshow('image', img)
+	cv2.imshow('image_part1', img)
 	cv2.waitKey(0)
 
 	P2 = np.asarray(P2)
@@ -75,6 +78,7 @@ def part2(image):
 	Obtain vanishing line for an image
 	
 	'''
+	global vanish_line
 	img = image.copy()
 	
 	P2 = part1(img, 4)
@@ -90,7 +94,7 @@ def part2(image):
 	cv2.waitKey(0)
 	
 	line = np.cross([point1[0], point1[1], 1], [point2[0], point2[1], 1])
-	
+	vanish_line = line
 	return line
 
 
@@ -113,7 +117,38 @@ def part3(image):
 	cv2.imshow('parallel line', img)
 	cv2.waitKey(0)
 	
+def part5(image):
+
+	global vanish_line
+	img = image.copy()
+	# print(image.shape)
+	src_point = np.array( [[0, 0], [img.shape[1] - 1, 0], [0, img.shape[0] - 1]] ).astype(np.float32)
+	dst_point = np.array( [[0, img.shape[1]*0.33], [img.shape[1]*0.85, img.shape[0]*0.25], [img.shape[1]*0.15, img.shape[0]*0.7]] ).astype(np.float32)
+
+	# mat = np.zeros((3,2))
+	# print(np.append(src_point, np.ones((3,1)), axis = 1).shape)
+
+	a = np.linalg.inv(np.append(src_point, np.ones((3,1)), axis = 1)) @ np.array([dst_point[0][0], dst_point[1][0], dst_point[2][0]]).reshape(-1, 1)
+	b = np.linalg.inv(np.append(src_point, np.ones((3,1)), axis = 1)) @ np.array([dst_point[0][1], dst_point[1][1], dst_point[2][1]]).reshape(-1, 1)
+
+	# print(a , b)
+	print(np.transpose(np.append(a, b, axis=1)))
 	
+	# vanish_line = part2(img)
+	mat = np.transpose(np.append(a, b, axis=1))
+	H = np.array([[1,0,0], [0,1,0]])
+	H = np.append(H, vanish_line.reshape(1, -1), axis=0)
+	final_H  = mat @ H
+	print(final_H.shape)
+	# for i in range(img.shape[0]):
+	# 	for j in range(img.shape[1]):
+	output = cv2.warpAffine(img, final_H, (img.shape[1], img.shape[0]))
+	cv2.imshow("Affine Transformation", output)
+	cv2.waitKey(0)
+
+
+
+
 if __name__ == '__main__':
 
 	# Read image
@@ -126,4 +161,7 @@ if __name__ == '__main__':
 	# line = part2(img)
 
 	# Part 3 : Parallel line to vanishing line
-	part3(img)
+	# part3(img)
+
+	# Part 5 : Affine rectification
+	part5(img)
