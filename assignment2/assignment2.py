@@ -5,6 +5,8 @@ import numpy as np
 
 global points
 global vanish_line
+global centre_line
+global save_point
 
 def get_point(event,x,y,flags,param):
 	global points
@@ -128,7 +130,7 @@ def part2(image):
 ############################ Part 3 : Line Parallel to Vanishing Line ##################################
 
 def part3(image, line):
-
+	global centre_line
 	img = image.copy()
 
 	# line = part2(img)
@@ -146,38 +148,72 @@ def part3(image, line):
 
 	cv2.imshow('parallel line', img)
 	cv2.waitKey(0)
-	
+
+def get_point1(event,x,y,flags,param):
+	global save_point
+	if event == cv2.EVENT_LBUTTONDBLCLK:
+		save_point = [y, x]
+
+
+def take_point(windowName, img):
+	global centre_line
+	global save_point
+
+	point1 = [0, -1.0*centre_line[2]/centre_line[1], 1]
+	point2 = [img.shape[1]-1, -1.0*(centre_line[0]*(img.shape[1]-1) + centre_line[2])/centre_line[1], 1]
+	cv2.line(img, (int(point1[0]), int(point1[1])), (int(point2[0]),int(point2[1])), (0,255,0), 2)
+
+	cv2.namedWindow(windowName)
+	cv2.setMouseCallback(windowName, get_point1)
+	cv2.imshow(windowName, img)
+	cv2.waitKey(1000 * 8)
+	cv2.destroyAllWindows()
+	return True
 
 def part4(image):
-
+	global centre_line
 	global vanish_line
-	img = image.copy()
+	global save_point
 
-	p = [img.shape[1]//2, -1.0*(vanish_line[0]*(img.shape[1]//2) + vanish_line[2])/vanish_line[1], 1]
+	img = image.copy()
+	var_image = image.copy()
+	print("Choose a point on the line drawn in image")
+
+	take_point("Pick_point", var_image)
+	variable = save_point[1]
+	cv2.line(img, (int(variable), int(0)), (int(variable), int(img.shape[0] - 1)), (0,0,255), 2)
+	p = [variable, -1.0*(vanish_line[0]*(variable) + vanish_line[2])/vanish_line[1], 1]
 	
+
 	H = np.random.rand(2,3)*100
-	# H = np.array([[1,0,0],[0,1,0]])
+	# H = np.array([[1,0,0],[0,1,0]])*100
 	a = np.array([-p[1], p[0]-(1.0/p[1]) ,1]).astype(np.float32).reshape(1,-1)
 	H = np.append(H, a, axis = 0)
 	result_point = H @ np.transpose(p)
-	print("H-: ", H)
-	print("Result Point -: ", result_point)
 	projected_a = -result_point[1]
 	projected_b = result_point[0]
+	print("H-: ", H)
+	print("Result Point -: ", result_point)
+	print("projected_b -: ", projected_b)
+	print("projected_a -: ", projected_a)
 	
-	for c in range(1,3):
-		l = np.transpose(H) @ np.array([projected_a, projected_b, c*1000]).reshape(-1, 1)
+
+	for c in range(2):
+		l = np.transpose(H) @ np.array([projected_a, projected_b, c*(projected_a+projected_b)]).reshape(-1, 1)
 		a = l[0]
 		b = l[1]
 		
 		point1 = (-l[2]-(img.shape[0]-1)*l[1])/a
+
 		if point1 >= img.shape[1]:
 			point1 = (-l[2]-(img.shape[1]-1)*l[0])/b
 			cv2.line(img, (int(p[0]), int(p[1])), (int(img.shape[1]-1),int(point1)), (255,0,0), 2)
 		else:
 			# point2 = (-l[2] - (a*200))/b
 			cv2.line(img, (int(p[0]), int(p[1])), (int(point1),int(img.shape[0]-1)), (255,0,0), 2)
-
+		print(l/l[2])
+		print(p)
+		print(int(img.shape[1]-1),int(point1))
 	cv2.imshow('Three Lines', img)
 	cv2.waitKey(0)
 
@@ -218,7 +254,7 @@ if __name__ == '__main__':
 	line = part2(img)
 
 	# Part 3 : Parallel line to vanishing line
-	# part3(img, line)
+	part3(img, line)
 
 	# Part 4 : Three Lines
 	part4(img)
