@@ -87,8 +87,6 @@ def part1(image, numLines):
 				p /= p[2]
 				P2.append(p)
 
-			# make_line = int(input('Press 1 for drawing line segments on image, 0 for exiting GUI :'))
-
 	cv2.imshow('image_part1', img)
 	cv2.imwrite('Images/LinesConsideredForVanishingLine.jpg', img)
 	cv2.waitKey(0)
@@ -133,8 +131,6 @@ def part2(image):
 def part3(image, line):
 	global centre_line
 	img = image.copy()
-
-	# line = part2(img)
 
 	center = [img.shape[1]//2, img.shape[0]//2]
 	line[2] = -1.0 * (line[0] * center[0] + line[1] * center[1])
@@ -209,10 +205,8 @@ def part4(image):
 		result_point = np.matmul(H, np.transpose(p))
 		projected_a = -result_point[1]
 		projected_b = result_point[0]
-		# print("H-: ", H)
-		# print("Result Point -: ", result_point)
-		# print("projected_b -: ", projected_b)
-		# print("projected_a -: ", projected_a)
+
+		# Choose Random Colour
 		B = int(random.randint(0,50)*random.randint(0,5))
 		G = int(random.randint(0,50)*random.randint(0,5))
 		R = int(random.randint(0,50)*random.randint(0,5))
@@ -229,11 +223,7 @@ def part4(image):
 				point1 = (-l[2]-(img.shape[1]-1)*l[0])/b
 				cv2.line(img, (int(p[0]), int(p[1])), (int(img.shape[1]-1),int(point1)), (B,G,R), 2) 
 			else:
-				# point2 = (-l[2] - (a*200))/b
 				cv2.line(img, (int(p[0]), int(p[1])), (int(point1),int(img.shape[0]-1)), (B,G,R), 2)
-			print(l/l[2])
-			print(p)
-			print(int(img.shape[1]-1),int(point1))
 
 	cv2.imshow('Three Lines', img)
 	cv2.imwrite('Images/3SetsofLinesThroughVanishingPoint.jpg', img)
@@ -244,22 +234,19 @@ def part4(image):
 def part5(image):
 
 	global vanish_line
+
 	img = image.copy()
-	# print(image.shape)
 	src_point = np.array( [[0, 0], [img.shape[1] - 1, 0], [0, img.shape[0] - 1]] ).astype(np.float32)
 	dst_point = np.array( [[0, img.shape[1]*0.33], [img.shape[1]*0.85, img.shape[0]*0.25], [img.shape[1]*0.15, img.shape[0]*0.7]] ).astype(np.float32)
 
 	a = np.matmul(np.linalg.inv(np.append(src_point, np.ones((3,1)), axis = 1)), np.array([dst_point[0][0], dst_point[1][0], dst_point[2][0]]).reshape(-1, 1))
 	b = np.matmul(np.linalg.inv(np.append(src_point, np.ones((3,1)), axis = 1)), np.array([dst_point[0][1], dst_point[1][1], dst_point[2][1]]).reshape(-1, 1))
 
-	# vanish_line = part2(img)
 	mat = np.transpose(np.append(a, b, axis=1))
 	H = np.array([[1,0,0], [0,1,0]])
 	H = np.append(H, vanish_line.reshape(1, -1), axis=0)  
 	final_H  = np.matmul(mat, H)
 
-	# for i in range(img.shape[0]):
-	#   for j in range(img.shape[1]):
 	output = cv2.warpAffine(img, final_H, (img.shape[1], img.shape[0]))
 	cv2.imshow("Affine Transformation", output)
 	cv2.imwrite('Images/AffineTransformation.jpg', output)
