@@ -114,9 +114,39 @@ def part3(image):
 
 	cv2.line(img, (int(point1[0]), int(point1[1])), (int(point2[0]),int(point2[1])), (0,255,0), 2)
 
+
+	centre_line = np.cross(point1, point2)
+	centre_line /= centre_line[2]
+
 	cv2.imshow('parallel line', img)
 	cv2.waitKey(0)
 	
+
+def part4(image):
+
+	img = image.copy()
+	p = [img.shape[1]//2, img.shape[0]//2, 1]
+
+	H = np.random.rand(2,3)
+	a = np.array([-p[1],(p[0]-(float(p[1])/float(p[0]))),1]).astype(np.float32).reshape(1,-1)
+
+	H = np.append(H, a, axis = 0)
+	result_point = H @ np.transpose(p)
+
+	projected_a = result_point[1]
+	projected_b = -result_point[0]
+	
+	for c in range(1,4):
+		l = np.transpose(np.linalg.inv(H)) @ np.array([projected_a, projected_b, c]).reshape(-1, 1)
+		a = l[0]
+		b = l[1]
+		point1 = (-l[2] - a)/b
+		point2 = (-l[2] - (a*200))/b
+		cv2.line(img, (int(1), int(point1)), (int(200),int(point2)), (0,255,0), 2)
+
+	cv2.imshow('Three Lines', img)
+	cv2.waitKey(0)
+
 def part5(image):
 
 	global vanish_line
@@ -163,5 +193,8 @@ if __name__ == '__main__':
 	# Part 3 : Parallel line to vanishing line
 	# part3(img)
 
+	# Part 4 : Three Lines
+	part4(img)
+
 	# Part 5 : Affine rectification
-	part5(img)
+	# part5(img)
