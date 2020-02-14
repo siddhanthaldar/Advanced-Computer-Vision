@@ -88,7 +88,7 @@ def part1(image, numLines):
 				P2.append(p)
 
 	cv2.imshow('image_part1', img)
-	cv2.imwrite('Images/LinesConsideredForVanishingLine.jpg', img)
+	cv2.imwrite('Results/LinesConsideredForVanishingLine.jpg', img)
 	cv2.waitKey(0)
 
 	P2 = np.asarray(P2)
@@ -120,7 +120,7 @@ def part2(image):
 	cv2.line(img, (int(point1[0]), int(point1[1])), (int(point2[0]),int(point2[1])), (0,255,0), 2)
 
 	cv2.imshow('vanishing line', img)
-	cv2.imwrite('Images/VanishingLine.jpg', img)
+	cv2.imwrite('Results/VanishingLine.jpg', img)
 	cv2.waitKey(0)
 	
 	return line
@@ -144,7 +144,7 @@ def part3(image, line):
 	centre_line /= centre_line[2]
 
 	cv2.imshow('parallel line', img)
-	cv2.imwrite('Images/VanishingLineThroughCentre.jpg', img)
+	cv2.imwrite('Results/VanishingLineThroughCentre.jpg', img)
 	cv2.waitKey(0)
 
 
@@ -226,7 +226,7 @@ def part4(image):
 				cv2.line(img, (int(p[0]), int(p[1])), (int(point1),int(img.shape[0]-1)), (B,G,R), 2)
 
 	cv2.imshow('Three Lines', img)
-	cv2.imwrite('Images/3SetsofLinesThroughVanishingPoint.jpg', img)
+	cv2.imwrite('Results/3SetsofLinesThroughVanishingPoint.jpg', img)
 	cv2.waitKey(0)
 
 ############################ Part 5 : Affine Projection and Rectification ##################################
@@ -249,16 +249,16 @@ def part5(image):
 
 	output = cv2.warpAffine(img, final_H, (img.shape[1], img.shape[0]))
 	cv2.imshow("Affine Transformation", output)
-	cv2.imwrite('Images/AffineTransformation.jpg', output)
+	cv2.imwrite('Results/AffineTransformation.jpg', output)
 	cv2.waitKey(0)
 
 
 if __name__ == '__main__':
 
-	os.makedirs("Images", exist_ok = True)
+	os.makedirs("Results", exist_ok = True)
 
 	# Read image
-	img = cv2.imread('Images/Garden.JPG')
+	img = cv2.imread('Results/Garden.JPG')
 	
 	# Part 1 : GUI for drawing line segments
 	# P2 = part1(img, 2)
