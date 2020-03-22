@@ -31,7 +31,7 @@ def part2(image1, image2):
 		x = kp1[match.queryIdx].pt[0]
 		y = kp1[match.queryIdx].pt[1]
 		x_dash = kp2[match.trainIdx].pt[0]
-		y_dash = kp2[match.trainIdx].pt[0]
+		y_dash = kp2[match.trainIdx].pt[1]
 		# print(str(x) + " " + str(y) + "    "+str(x_dash)+" "+str(y_dash))
 		a = [x*x_dash, x*y_dash, x, y*x_dash, y*y_dash, y, x_dash, y_dash, 1]
 		if (i == 0):
@@ -52,10 +52,40 @@ def part2(image1, image2):
 	
 	f = u @ smat @ vh
 	return f
-	print(f.shape, eigenvector.shape, product.shape, A_t.shape, A.shape, len(matches))
+	# print(f.shape, eigenvector.shape, product.shape, A_t.shape, A.shape, len(matches))
+
+def part3(image1, image2):
+	kp1, kp2, matches = part1(image1.copy(), image2.copy())
+	f = part2(image1, image2)
+	img1 = image1.copy()
+	img2 = image2.copy()
+	for match in matches:
+		x = kp1[match.queryIdx].pt[0]
+		y = kp1[match.queryIdx].pt[1]
+		x_dash = kp2[match.trainIdx].pt[0]
+		y_dash = kp2[match.trainIdx].pt[1]
+		point = np.array([x,y,1]).reshape(-1,1)
+		point_dash = np.array([x_dash, y_dash, 1]).reshape(-1, 1)
+		# https://www.cse.unr.edu/~bebis/CS791E/Notes/EpipolarGeonetry.pdf -> Page 12
+		line_dash = f @ point
+		line = np.transpose(f) @ point_dash
+		
+		point1 = np.array([0, float(-1.0*line[2]/line[1]), 1])
+		point2 = np.array([image1.shape[1]-1, float(-1.0*(line[0]*(image1.shape[1]-1) + line[2])/line[1]), 1])
+		print(point1, point2)
+		cv2.line(img1, (int(point1[0]), int(point1[1])), (int(point2[0]),int(point2[1])), 255, 2)
+
+		point1_dash = [0, -1.0*line_dash[2]/line_dash[1], 1]
+		point2_dash = [image2.shape[1]-1, -1.0*(line_dash[0]*(image2.shape[1]-1) + line_dash[2])/line_dash[1], 1]
+		cv2.line(img2, (int(point1_dash[0]), int(point1_dash[1])), (int(point2_dash[0]),int(point2_dash[1])), 255, 2)
+	cv2.imshow("Image1", img1)
+	cv2.imshow("image2", img2)
+	cv2.waitKey(0)
+
+
 
 if __name__ == '__main__':
 	
 	img1 = cv2.imread("Amitava_first.JPG", 0)
 	img2 = cv2.imread("Amitava_second.JPG", 0)
-	part2(img1, img2)
+	part3(img1, img2)
