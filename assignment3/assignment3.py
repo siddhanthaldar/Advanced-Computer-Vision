@@ -28,6 +28,7 @@ def part1(image1, image2):
 def part2(image1, image2):
 	kp1, kp2, matches = part1(image1.copy(), image2.copy())
 	for i, match in enumerate(matches):
+		# the order of keypoint is (x,y)
 		x = kp1[match.queryIdx].pt[0]
 		y = kp1[match.queryIdx].pt[1]
 		x_dash = kp2[match.trainIdx].pt[0]
@@ -52,7 +53,7 @@ def part2(image1, image2):
 	# SVD of f_rought
 	u, s, vh = np.linalg.svd(f_rough)
 	# making smallest singular vector 0
-	smat = np.zeros((s.shape[0], s.shape[0]), float)
+	smat = np.zeros((u.shape[1], vh.shape[0]), float)
 	smat[0][0] = s[0]
 	smat[1][1] = s[1]
 	
@@ -62,9 +63,11 @@ def part2(image1, image2):
 
 def part3(image1, image2):
 	kp1, kp2, matches = part1(image1.copy(), image2.copy())
-	f = part2(image1, image2)
+	f = part2(image1.copy(), image2.copy())
 	img1 = image1.copy()
 	img2 = image2.copy()
+	line_list = list()
+	line_dash_list = list()
 	for match in matches:
 		x = kp1[match.queryIdx].pt[0]
 		y = kp1[match.queryIdx].pt[1]
@@ -74,11 +77,13 @@ def part3(image1, image2):
 		point_dash = np.array([x_dash, y_dash, 1]).reshape(-1, 1)
 		# https://www.cse.unr.edu/~bebis/CS791E/Notes/EpipolarGeonetry.pdf -> Page 12
 		line_dash = f @ point
-		line = f @ point_dash
-		
+		line = np.transpose(f) @ point_dash
+		line_list.append(line)
+		line_dash_list.append(line_dash)
+
 		point1 = np.array([0, float(-1.0*line[2]/line[1]), 1])
 		point2 = np.array([image1.shape[1]-1, float(-1.0*(line[0]*(image1.shape[1]-1) + line[2])/line[1]), 1])
-		print(point1, point2)
+		# print(point1, point2)
 		cv2.line(img1, (int(point1[0]), int(point1[1])), (int(point2[0]),int(point2[1])), 255, 2)
 
 		point1_dash = [0, -1.0*line_dash[2]/line_dash[1], 1]
@@ -87,14 +92,42 @@ def part3(image1, image2):
 	cv2.imshow("Image1", img1)
 	cv2.imshow("image2", img2)
 	cv2.waitKey(0)
+	return line_list, line_dash_list	
 
-
+def part4(image1, image2):
+	kp1, kp2, matches = part1(image1.copy(), image2.copy())
+	f = part2(image1.copy(), image2.copy())
+	lines, lines_dash = part3(image1.copy(), image2.copy())
+	img1 = image1.copy()
+	img2 = image2.copy()
+	
+	#from epipolar lines
+	e_line = np.cross(lines[0].reshape(-1), lines[1].reshape(-1))
+	e_line /= e_line[2]
+	e_dash_line = np.cross(lines_dash[0].reshape(-1), lines_dash[1].reshape(-1))
+	e_dash_line /= e_dash_line[2]
+	# https://www.robots.ox.ac.uk/~vgg/hzbook/hzbook1/HZepipolar.pdf -> page 8
+	# e_dash.T -> left null space of fundamental matrix and e is right null space of fundamental matrix
+	# https://cseweb.ucsd.edu/classes/wi15/cse252B-a/nullspace.pdf -> to find right and left null space of matrix'
+	u, s, vh = np.linalg.svd(f)
+	#only one 0 singular value must be there, taking the minimum one
+	index = -1
+	# ith column
+	e_dash_transpose_f = u[:, index]
+	#ith row
+	e_f = vh[index, :]
+	e_f /= e_f[2]
+	e_dash_f = np.transpose(e_dash_transpose_f)
+	e_dash_f /= e_dash_f[2]
+	distance_e = ((e_line[0]-e_f[0])**2 + (e_line[1]-e_f[1])**2)**0.5
+	distance_e_dash = ((e_dash_line[0]-e_dash_f[0])**2 + (e_dash_line[1]-e_dash_f[1])**2)
+	print(distance_e, distance_e_dash)
 
 if __name__ == '__main__':
 	
-	# img1 = cv2.imread("Amitava_first.JPG", 0)
-	# img2 = cv2.imread("Amitava_second.JPG", 0)
-	img1 = cv2.imread("a.png", 0)
-	img2 = cv2.imread("b.png", 0)
+	img1 = cv2.imread("Amitava_first.JPG", 0)
+	img2 = cv2.imread("Amitava_second.JPG", 0)
+	# img1 = cv2.imread("a.png", 0)
+	# img2 = cv2.imread("b.png", 0)
 	print(img1.shape, img2.shape)
-	part3(img1, img2)
+	part4(img1, img2)
