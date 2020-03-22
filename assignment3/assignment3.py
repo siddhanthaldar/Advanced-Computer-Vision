@@ -32,6 +32,12 @@ def part2(image1, image2):
 		y = kp1[match.queryIdx].pt[1]
 		x_dash = kp2[match.trainIdx].pt[0]
 		y_dash = kp2[match.trainIdx].pt[1]
+
+		#normalise coordinate
+		# x = float((kp1[match.queryIdx].pt[0] - (image1.shape[1]/2.0))/image1.shape[1])
+		# y = float((kp1[match.queryIdx].pt[1] - image1.shape[0]/2.0)/image1.shape[0])
+		# x_dash = float((kp2[match.trainIdx].pt[0] - image2.shape[1]/2.0)/image2.shape[1])
+		# y_dash = float((kp2[match.trainIdx].pt[1] - image2.shape[0]/2.0)/image2.shape[0])
 		# print(str(x) + " " + str(y) + "    "+str(x_dash)+" "+str(y_dash))
 		a = [x*x_dash, x*y_dash, x, y*x_dash, y*y_dash, y, x_dash, y_dash, 1]
 		if (i == 0):
@@ -68,7 +74,7 @@ def part3(image1, image2):
 		point_dash = np.array([x_dash, y_dash, 1]).reshape(-1, 1)
 		# https://www.cse.unr.edu/~bebis/CS791E/Notes/EpipolarGeonetry.pdf -> Page 12
 		line_dash = f @ point
-		line = np.transpose(f) @ point_dash
+		line = f @ point_dash
 		
 		point1 = np.array([0, float(-1.0*line[2]/line[1]), 1])
 		point2 = np.array([image1.shape[1]-1, float(-1.0*(line[0]*(image1.shape[1]-1) + line[2])/line[1]), 1])
@@ -86,6 +92,9 @@ def part3(image1, image2):
 
 if __name__ == '__main__':
 	
-	img1 = cv2.imread("Amitava_first.JPG", 0)
-	img2 = cv2.imread("Amitava_second.JPG", 0)
+	# img1 = cv2.imread("Amitava_first.JPG", 0)
+	# img2 = cv2.imread("Amitava_second.JPG", 0)
+	img1 = cv2.imread("a.png", 0)
+	img2 = cv2.imread("b.png", 0)
+	print(img1.shape, img2.shape)
 	part3(img1, img2)
