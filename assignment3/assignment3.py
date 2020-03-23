@@ -114,7 +114,7 @@ def part2(image1, image2):
 	return f
 	# print(f.shape, eigenvector.shape, product.shape, A_t.shape, A.shape, len(matches))
 
-def part3(image1, image2):
+def part3(image1, image2, show=True):
 	kp1, kp2, matches = part1(image1.copy(), image2.copy())
 	f = part2(image1.copy(), image2.copy())
 	img1 = image1.copy()
@@ -165,15 +165,16 @@ def part3(image1, image2):
 
 		cv2.line(img2, (int(point1_dash[0]), int(point1_dash[1])), (int(point2_dash[0]),int(point2_dash[1])), 255, 2)
 
-	cv2.imshow("Image1", img1)
-	cv2.imshow("image2", img2)
-	cv2.waitKey(0)
+	if show:
+		cv2.imshow("Image1", img1)
+		cv2.imshow("image2", img2)
+		cv2.waitKey(0)
 	return line_list, line_dash_list	
 
 def part4(image1, image2):
-	kp1, kp2, matches = part1(image1.copy(), image2.copy())
+	# kp1, kp2, matches = part1(image1.copy(), image2.copy())
 	f = part2(image1.copy(), image2.copy())
-	lines, lines_dash = part3(image1.copy(), image2.copy())
+	lines, lines_dash = part3(image1.copy(), image2.copy(), show=False)
 	img1 = image1.copy()
 	img2 = image2.copy()
 	
@@ -198,6 +199,27 @@ def part4(image1, image2):
 	distance_e = ((e_line[0]-e_f[0])**2 + (e_line[1]-e_f[1])**2)**0.5
 	distance_e_dash = ((e_dash_line[0]-e_dash_f[0])**2 + (e_dash_line[1]-e_dash_f[1])**2)
 	print(distance_e, distance_e_dash)
+	return e_f, e_dash_f
+
+def part5(image1, image2):
+	F = part2(image1.copy(), image2.copy())
+	e, e_dash = part4(image1.copy(), image2.copy())
+
+	P = np.array([[1,0,0,0],
+		            [0,1,0,0],
+		            [0,0,1,0]], dtype= np.float)
+
+	S = np.array([[0,-e_dash[2],e_dash[1]],
+		            [e_dash[2],0,-e_dash[0]],
+		            [-e_dash[1],e_dash[0],0]])
+
+	e_dash = e_dash.reshape(-1,1)
+
+	P_dash = np.append(S@F, e_dash, axis=1)
+
+	print("P :", P)
+	print("P_dash:", P_dash)
+	return P, P_dash
 
 if __name__ == '__main__':
 	
@@ -208,4 +230,6 @@ if __name__ == '__main__':
 	print(img1.shape, img2.shape)
 	# f = part2(img1, img2)
 	# part3(img1, img2)
-	part4(img1, img2)
+	# part4(img1, img2)
+	part5(img1, img2)
+	
