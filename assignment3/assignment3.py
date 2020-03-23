@@ -45,16 +45,16 @@ def part2(image1, image2):
 	mean_x = np.mean(x)
 	mean_y = np.mean(y)
 	T1 = np.array([[math.sqrt(2.0)/sigma_x, 0 , -math.sqrt(2.0)*mean_x/sigma_x],
-								 [0, math.sqrt(2.0)/sigma_y , -math.sqrt(2.0)*mean_y/sigma_y],
-								 [0 ,  0 , 1]])
+                 [0, math.sqrt(2.0)/sigma_y , -math.sqrt(2.0)*mean_y/sigma_y],
+                 [0 ,  0 , 1]])
 	
 	sigma_x = np.std(x_dash)
 	sigma_y = np.std(y_dash)
 	mean_x = np.mean(x_dash)
 	mean_y = np.mean(y_dash)
 	T2 = np.array([[math.sqrt(2.0)/sigma_x, 0 , -math.sqrt(2.0)*mean_x/sigma_x],
-								 [0, math.sqrt(2.0)/sigma_y , -math.sqrt(2.0)*mean_y/sigma_y],
-								 [0 ,  0 , 1]])
+                 [0, math.sqrt(2.0)/sigma_y , -math.sqrt(2.0)*mean_y/sigma_y],
+                 [0 ,  0 , 1]])
 	
 	# # Normalization matrices for range [-1,1]
 	# T1 = np.array([[2.0/image1.shape[1], 0 , -1],
