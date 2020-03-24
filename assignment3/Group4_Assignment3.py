@@ -8,6 +8,7 @@ Members : (1) Harsh Maheshwari - 16EE35008
 import numpy as np
 import cv2
 import math
+import os
 
 def part1(image1, image2, show=True):
 	if show:
@@ -167,6 +168,9 @@ def part3(image1, image2, show=True):
 		cv2.line(img2, (int(point1_dash[0]), int(point1_dash[1])), (int(point2_dash[0]),int(point2_dash[1])), 255, 2)
 
 	if show:
+		os.makedirs('./output', exist_ok=True)
+		cv2.imwrite('./output/Part3-EpipolarLines_Image1.jpg', img1)
+		cv2.imwrite('./output/Part3-EpipolarLines_Image2.jpg', img2)
 		cv2.imshow("Part 3 : Epipolar Lines in Image 1", img1)
 		cv2.imshow("Part 3 : Epipolar Lines in Image 2", img2)
 		# cv2.waitKey(0)
@@ -214,6 +218,8 @@ def part4(image1, image2, show=True):
 	distance_e_dash = ((e_dash_line[0]-e_dash_f[0])**2 + (e_dash_line[1]-e_dash_f[1])**2)
 	
 	if show:
+		print("Epipoles from Lines : ", [int(e_line[0]), int(e_line[1])], [int(e_dash_line[0]), int(e_dash_line[1])])
+		print("Epipoles from Fundamental Matrix : ", [int(e_f[0]), int(e_f[1])], [int(e_dash_f[0]), int(e_dash_f[1])])
 		print("Distance between estimated values of e :",distance_e)
 		print("Distance between estimated values of e_dash :", distance_e_dash)
 		print("Done")
@@ -251,8 +257,8 @@ def part5(image1, image2, show=True):
 
 if __name__ == '__main__':
 	
-	img1 = cv2.imread("Amitava_first.JPG", 0)
-	img2 = cv2.imread("Amitava_second.JPG", 0)
+	img1 = cv2.imread("./input/Amitava_first.JPG", 0)
+	img2 = cv2.imread("./input/Amitava_second.JPG", 0)
 
 	# Part 1 : Key	point	extraction and	feature	descriptors
 	kp1, kp2, matches = part1(img2, img2)
