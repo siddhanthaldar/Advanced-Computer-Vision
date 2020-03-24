@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import math
+import matplotlib.pyplot as plt
 
 def part1(image1, image2):
 	img1 = image1.copy()
@@ -171,7 +172,7 @@ def part3(image1, image2, show=True):
 		cv2.waitKey(0)
 	return line_list, line_dash_list	
 
-def part4(image1, image2):
+def part4(image1, image2, show=True):
 	# kp1, kp2, matches = part1(image1.copy(), image2.copy())
 	f = part2(image1.copy(), image2.copy())
 	lines, lines_dash = part3(image1.copy(), image2.copy(), show=False)
@@ -198,12 +199,16 @@ def part4(image1, image2):
 	e_dash_f /= e_dash_f[2]
 	distance_e = ((e_line[0]-e_f[0])**2 + (e_line[1]-e_f[1])**2)**0.5
 	distance_e_dash = ((e_dash_line[0]-e_dash_f[0])**2 + (e_dash_line[1]-e_dash_f[1])**2)
-	print(distance_e, distance_e_dash)
+	
+	if show:
+		print("Distance between estimated values of e :",distance_e)
+		print("Distance between estimated values of e_dash :", distance_e_dash)
+
 	return e_f, e_dash_f
 
-def part5(image1, image2):
+def part5(image1, image2, show = True):
 	F = part2(image1.copy(), image2.copy())
-	e, e_dash = part4(image1.copy(), image2.copy())
+	e, e_dash = part4(image1.copy(), image2.copy(), show=False)
 
 	P = np.array([[1,0,0,0],
 		            [0,1,0,0],
@@ -217,9 +222,41 @@ def part5(image1, image2):
 
 	P_dash = np.append(S@F, e_dash, axis=1)
 
-	print("P :", P)
-	print("P_dash:", P_dash)
+	if show:
+		print("P :", P)
+		print("P_dash:", P_dash)
 	return P, P_dash
+
+def part6(image1, image2):
+	kp1, kp2, matches = part1(image1.copy(), image2.copy())
+	P, P_dash = part5(image1, image2, show=False)
+	P_inv, P_dash_inv = np.linalg.pinv(P), np.linalg.pinv(P_dash)
+
+	Z = []
+	Z_dash = []
+	for match in matches:
+		x = kp1[match.queryIdx].pt[0]
+		y = kp1[match.queryIdx].pt[1]
+		x_dash = kp2[match.trainIdx].pt[0]
+		y_dash = kp2[match.trainIdx].pt[1]
+
+		point = np.array([x,y,1]).reshape(-1,1)
+		point_dash = np.array([x_dash,y_dash,1]).reshape(-1, 1)
+
+		point_3d = P_inv @ point
+		point_dash_3d = P_dash_inv @ point_dash
+		print(point, point_3d)
+		Z.append(point_3d[2][0]/point_3d[3][0])
+		Z_dash.append(point_dash_3d[2][0]/point_dash_3d[3][0])
+
+	# print(Z)
+	exit()
+	# Plot it on a graph
+	fig, axs = plt.subplots(2)
+	fig.suptitle('Depth Plots for corresponding points')
+	axs[0].plot(Z)
+	axs[1].plot(Z_dash)
+	plt.show()
 
 if __name__ == '__main__':
 	
@@ -231,5 +268,6 @@ if __name__ == '__main__':
 	# f = part2(img1, img2)
 	# part3(img1, img2)
 	# part4(img1, img2)
-	part5(img1, img2)
+	# part5(img1, img2)
+	part6(img1, img2)
 	

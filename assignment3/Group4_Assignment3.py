@@ -9,7 +9,11 @@ import numpy as np
 import cv2
 import math
 
-def part1(image1, image2):
+def part1(image1, image2, show=True):
+	if show:
+		print("*********************************************************************")
+		print("Part 1 : Key	point	extraction and	feature	descriptors")
+	
 	img1 = image1.copy()
 	img2 = image2.copy()
 	sift = cv2.xfeatures2d.SIFT_create()
@@ -24,11 +28,20 @@ def part1(image1, image2):
 	for m,n in matches:
 		if m.distance < 0.75*n.distance:
 			good.append(m)
+
+	if show:
+		print("Done")
+		print("*********************************************************************")
+
 	return keypoint1, keypoint2, good
 
 # http://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MOHR_TRIGGS/node50.html -> for part 2
-def part2(image1, image2):
-	kp1, kp2, matches = part1(image1.copy(), image2.copy())
+def part2(image1, image2, show=True):
+	if show:
+		print("*********************************************************************")
+		print("Part 2 : Fundamental Matrix Computation")
+	
+	kp1, kp2, matches = part1(image1.copy(), image2.copy(), show=False)
 
 	# Calculate sigma_x and sigma_y for both images
 	x = []
@@ -109,11 +122,22 @@ def part2(image1, image2):
 	smat[1][1] = s[1]
 	
 	f = u @ smat @ vh
+
+	if show:
+		print("Fundamental Matrix :")
+		print(f)
+		print("Done")
+		print("*********************************************************************")
+
 	return f
 
 def part3(image1, image2, show=True):
-	kp1, kp2, matches = part1(image1.copy(), image2.copy())
-	f = part2(image1.copy(), image2.copy())
+	if show:
+		print("*********************************************************************")
+		print("Part 3 : Drawing Epipolar Lines")
+	
+	kp1, kp2, matches = part1(image1.copy(), image2.copy(), show=False)
+	f = part2(image1.copy(), image2.copy(), show=False)
 	img1 = image1.copy()
 	img2 = image2.copy()
 	line_list = list()
@@ -143,13 +167,20 @@ def part3(image1, image2, show=True):
 		cv2.line(img2, (int(point1_dash[0]), int(point1_dash[1])), (int(point2_dash[0]),int(point2_dash[1])), 255, 2)
 
 	if show:
-		cv2.imshow("Image1", img1)
-		cv2.imshow("image2", img2)
-		cv2.waitKey(0)
+		cv2.imshow("Part 3 : Epipolar Lines in Image 1", img1)
+		cv2.imshow("Part 3 : Epipolar Lines in Image 2", img2)
+		# cv2.waitKey(0)
+		print("Done")
+		print("*********************************************************************")
+		
 	return line_list, line_dash_list	
 
-def part4(image1, image2):
-	f = part2(image1.copy(), image2.copy())
+def part4(image1, image2, show=True):
+	if show:
+		print("*********************************************************************")
+		print("Part 4 : Error in epipole estimation from Fundamental Matrix and from epipoles")
+		
+	f = part2(image1.copy(), image2.copy(), show=False)
 	lines, lines_dash = part3(image1.copy(), image2.copy(), show=False)
 	img1 = image1.copy()
 	img2 = image2.copy()
@@ -181,14 +212,23 @@ def part4(image1, image2):
 	# Distances between different estimated values of epipoles
 	distance_e = ((e_line[0]-e_f[0])**2 + (e_line[1]-e_f[1])**2)**0.5
 	distance_e_dash = ((e_dash_line[0]-e_dash_f[0])**2 + (e_dash_line[1]-e_dash_f[1])**2)
-	print(distance_e, distance_e_dash)
 	
+	if show:
+		print("Distance between estimated values of e :",distance_e)
+		print("Distance between estimated values of e_dash :", distance_e_dash)
+		print("Done")
+		print("*********************************************************************")
+		
 	# Returning epipoles obtained from Fundamental Matrix for use in part 5
 	return e_f, e_dash_f
 
-def part5(image1, image2):
-	F = part2(image1.copy(), image2.copy())
-	e, e_dash = part4(image1.copy(), image2.copy())
+def part5(image1, image2, show=True):
+	if show:
+		print("*********************************************************************")
+		print("Part 5 : Estimating projection matrices from Fundamental	matrix")
+	
+	F = part2(image1.copy(), image2.copy(), show=False)
+	e, e_dash = part4(image1.copy(), image2.copy(), show=False)
 
 	P = np.array([[1,0,0,0],
 		            [0,1,0,0],
@@ -202,8 +242,11 @@ def part5(image1, image2):
 
 	P_dash = np.append(S@F, e_dash, axis=1)
 
-	print("P :", P)
-	print("P_dash:", P_dash)
+	if show:
+		print("P :", P)
+		print("P_dash:", P_dash)
+		print("Done")
+		print("*********************************************************************")
 	return P, P_dash
 
 if __name__ == '__main__':
@@ -211,8 +254,20 @@ if __name__ == '__main__':
 	img1 = cv2.imread("Amitava_first.JPG", 0)
 	img2 = cv2.imread("Amitava_second.JPG", 0)
 
-	# f = part2(img1, img2)
-	# part3(img1, img2)
-	# part4(img1, img2)
-	part5(img1, img2)
+	# Part 1 : Key	point	extraction and	feature	descriptors
+	kp1, kp2, matches = part1(img2, img2)
+
+	# Part 2 : Fundamental Matrix Computation
+	F = part2(img1, img2)
+
+	# Part 3 : Drawing Epipolar Lines
+	line_list, line_dash_list = part3(img1, img2)
+
+	# Part 4 : Computing epipoles and the distance between them
+	e, e_dash = part4(img1, img2)
+
+	# Part 5 : Estimating projection matrices from Fundamental	matrix
+	P, P_dash = part5(img1, img2)
+
+	cv2.waitKey(0)
 	
