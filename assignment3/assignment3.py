@@ -227,13 +227,54 @@ def part5(image1, image2, show = True):
 		print("P_dash:", P_dash)
 	return P, P_dash
 
+# def part6(image1, image2):
+# 	kp1, kp2, matches = part1(image1.copy(), image2.copy())
+# 	P, P_dash = part5(image1, image2, show=False)
+# 	P_inv, P_dash_inv = np.linalg.pinv(P), np.linalg.pinv(P_dash)
+
+# 	Z = []
+# 	Z_dash = []
+# 	for match in matches:
+# 		x = kp1[match.queryIdx].pt[0]
+# 		y = kp1[match.queryIdx].pt[1]
+# 		x_dash = kp2[match.trainIdx].pt[0]
+# 		y_dash = kp2[match.trainIdx].pt[1]
+
+# 		point = np.array([x,y,1]).reshape(-1,1)
+# 		point_dash = np.array([x_dash,y_dash,1]).reshape(-1, 1)
+
+# 		point_3d = P_inv @ point
+# 		point_dash_3d = P_dash_inv @ point_dash
+# 		print(point, point_3d)
+# 		Z.append(point_3d[2][0]/point_3d[3][0])
+# 		Z_dash.append(point_dash_3d[2][0]/point_dash_3d[3][0])
+
+# 	# print(Z)
+# 	exit()
+# 	# Plot it on a graph
+# 	fig, axs = plt.subplots(2)
+# 	fig.suptitle('Depth Plots for corresponding points')
+# 	axs[0].plot(Z)
+# 	axs[1].plot(Z_dash)
+# 	plt.show()
+
 def part6(image1, image2):
 	kp1, kp2, matches = part1(image1.copy(), image2.copy())
 	P, P_dash = part5(image1, image2, show=False)
-	P_inv, P_dash_inv = np.linalg.pinv(P), np.linalg.pinv(P_dash)
+	
+	# Compute M and m matrices
+	M = P[:,:3]
+	m = P[:,3:]
+	M_dash = P_dash[:,:3]
+	m_dash = P_dash[:,3:]
+
+	# Compute centres of both cameras
+	C = -np.linalg.inv(M) @ m
+	C_dash = -np.linalg.inv(M_dash) @ m_dash
 
 	Z = []
-	Z_dash = []
+	S = []
+	T = []
 	for match in matches:
 		x = kp1[match.queryIdx].pt[0]
 		y = kp1[match.queryIdx].pt[1]
@@ -243,28 +284,63 @@ def part6(image1, image2):
 		point = np.array([x,y,1]).reshape(-1,1)
 		point_dash = np.array([x_dash,y_dash,1]).reshape(-1, 1)
 
-		point_3d = P_inv @ point
-		point_dash_3d = P_dash_inv @ point_dash
-		print(point, point_3d)
-		Z.append(point_3d[2][0]/point_3d[3][0])
-		Z_dash.append(point_dash_3d[2][0]/point_dash_3d[3][0])
+		# Compute d and d_dash for a particular point
+		d = np.linalg.inv(M) @ point
+		d_dash = np.linalg.inv(M_dash) @ point_dash
 
-	# print(Z)
-	exit()
+		# Define parameters for computing s and t
+		c1 = np.sum(np.multiply(C-C_dash,d))
+		c2 = np.sum(np.multiply(C-C_dash,d_dash))
+		b1 = np.sum(d**2)
+		b2 = np.sum(d_dash**2)
+		a = np.sum(np.multiply(d,d_dash))
+
+		# Calculate t and s
+		s = (c1*b2-c2*a)/(a**2-b1*b2)
+		t = (c1*a-c2*b1)/(a**2-b1*b2)
+		
+		# Scene points
+		s_point1 = C + s*d
+		s_point2 = C_dash + t*d_dash
+		s_point = 0.5 * (s_point1 + s_point2) 
+
+		if s_point[2] > 50:
+			s_point[2] = 50
+		elif s_point[2] < -50:
+			s_point[2] = -50
+		if s > 50:
+			s = 50
+		elif s < -50:
+			s = -50
+		if t > 10:
+			t = 10
+		elif t < -10:
+			t = -10
+
+		Z.append(s_point[2] if s_point[2]>=0 else -1.0*s_point[2])
+		S.append(s if s>=0 else -1.0*s)
+		T.append(t if t>=0 else -1.0*t)
+
+	print(max(Z), min(Z))
+	print(max(S), min(S))
+	print(max(T), min(T))
+
 	# Plot it on a graph
-	fig, axs = plt.subplots(2)
+	fig, axs = plt.subplots(3)
 	fig.suptitle('Depth Plots for corresponding points')
 	axs[0].plot(Z)
-	axs[1].plot(Z_dash)
+	axs[1].plot(S)
+	axs[2].plot(T)
 	plt.show()
+
 
 if __name__ == '__main__':
 	
-	img1 = cv2.imread("Amitava_first.JPG", 0)
-	img2 = cv2.imread("Amitava_second.JPG", 0)
+	img1 = cv2.imread("./input/Amitava_first.JPG", 0)
+	img2 = cv2.imread("./input/Amitava_second.JPG", 0)
 	# img1 = cv2.imread("a.png", 0)
 	# img2 = cv2.imread("b.png", 0)
-	print(img1.shape, img2.shape)
+	# print(img1.shape, img2.shape)
 	# f = part2(img1, img2)
 	# part3(img1, img2)
 	# part4(img1, img2)

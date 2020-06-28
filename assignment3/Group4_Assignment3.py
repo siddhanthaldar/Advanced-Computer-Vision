@@ -9,6 +9,7 @@ import numpy as np
 import cv2
 import math
 import os
+import matplotlib.pyplot as plt
 
 def part1(image1, image2, show=True):
 	if show:
@@ -218,8 +219,6 @@ def part4(image1, image2, show=True):
 	distance_e_dash = ((e_dash_line[0]-e_dash_f[0])**2 + (e_dash_line[1]-e_dash_f[1])**2)
 	
 	if show:
-		print("Epipoles from Lines : ", [int(e_line[0]), int(e_line[1])], [int(e_dash_line[0]), int(e_dash_line[1])])
-		print("Epipoles from Fundamental Matrix : ", [int(e_f[0]), int(e_f[1])], [int(e_dash_f[0]), int(e_dash_f[1])])
 		print("Distance between estimated values of e :",distance_e)
 		print("Distance between estimated values of e_dash :", distance_e_dash)
 		print("Done")
@@ -255,6 +254,92 @@ def part5(image1, image2, show=True):
 		print("*********************************************************************")
 	return P, P_dash
 
+def part6(image1, image2, show=True):
+	if show:
+		print("*********************************************************************")
+		print("Part 6 : Computing 3D coordinates of the scene using projection matrices")
+
+	kp1, kp2, matches = part1(image1.copy(), image2.copy(), show=False)
+	P, P_dash = part5(image1, image2, show=False)
+	
+	# Compute M and m matrices
+	M = P[:,:3]
+	m = P[:,3:]
+	M_dash = P_dash[:,:3]
+	m_dash = P_dash[:,3:]
+
+	# Compute centres of both cameras
+	C = -np.linalg.inv(M) @ m
+	C_dash = -np.linalg.inv(M_dash) @ m_dash
+
+	Z = []
+	S = []
+	T = []
+	for match in matches:
+		x = kp1[match.queryIdx].pt[0]
+		y = kp1[match.queryIdx].pt[1]
+		x_dash = kp2[match.trainIdx].pt[0]
+		y_dash = kp2[match.trainIdx].pt[1]
+
+		point = np.array([x,y,1]).reshape(-1,1)
+		point_dash = np.array([x_dash,y_dash,1]).reshape(-1, 1)
+
+		# Compute d and d_dash for a particular point
+		d = np.linalg.inv(M) @ point
+		d_dash = np.linalg.inv(M_dash) @ point_dash
+
+		# Define parameters for computing s and t
+		c1 = np.sum(np.multiply(C-C_dash,d))
+		c2 = np.sum(np.multiply(C-C_dash,d_dash))
+		b1 = np.sum(d**2)
+		b2 = np.sum(d_dash**2)
+		a = np.sum(np.multiply(d,d_dash))
+
+		# Calculate t and s
+		s = (c1*b2-c2*a)/(a**2-b1*b2)
+		t = (c1*a-c2*b1)/(a**2-b1*b2)
+		
+		# Scene points
+		s_point1 = C + s*d
+		s_point2 = C_dash + t*d_dash
+		s_point = 0.5 * (s_point1 + s_point2) 
+
+		if s_point[2] > 50:
+			s_point[2] = 50
+		elif s_point[2] < -50:
+			s_point[2] = -50
+		if s > 50:
+			s = 50
+		elif s < -50:
+			s = -50
+		if t > 10:
+			t = 10
+		elif t < -10:
+			t = -10
+
+		Z.append(s_point[2] if s_point[2]>=0 else -1.0*s_point[2])
+		S.append(s if s>=0 else -1.0*s)
+		T.append(t if t>=0 else -1.0*t)
+
+	if show:
+		# Plot it on a graph
+		fig, axs = plt.subplots(3)
+		fig.suptitle('Depth Plots for corresponding matching points')
+		axs[0].plot(Z)
+		axs[0].set_title('Z-coordinate of scene points')
+		axs[0].set_ylabel('Depth')
+		axs[1].plot(S)
+		axs[1].set_title('Depth from Camera 1')
+		axs[1].set_ylabel('Depth')
+		axs[2].plot(T)
+		axs[2].set_title('Depth from Camera 2')
+		axs[2].set_ylabel('Depth')
+		plt.savefig('./output/Part6_Depth.jpg')
+		plt.show()
+		print("Done")
+		print("*********************************************************************")
+
+
 if __name__ == '__main__':
 	
 	img1 = cv2.imread("./input/Amitava_first.JPG", 0)
@@ -274,6 +359,9 @@ if __name__ == '__main__':
 
 	# Part 5 : Estimating projection matrices from Fundamental	matrix
 	P, P_dash = part5(img1, img2)
-
+	print("Close images to move on to Part 6")
 	cv2.waitKey(0)
+	cv2. destroyAllWindows()
 	
+	# Part 6 : Computing 3D coordinates of the	scene	using projection matrices
+	part6(img1, img2)
